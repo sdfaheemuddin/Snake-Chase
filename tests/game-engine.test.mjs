@@ -30,7 +30,7 @@ test('JSON configuration enables both challenges with 150 initial speed', () => 
 
 test('remote JSON loads correctly; bad data falls back to safe defaults', async () => {
   const valid = await loadGameConfig(async () => ({ ok: true, json: async () => getJson() }));
-  assert.equal(valid.initialSpeed, 130);
+  assert.equal(valid.initialSpeed, 150);
   assert.equal(resolveGameConfig({ lives: -4, scoringRadius: 3 }).lives, 3);
   const originalWarn = console.warn;
   console.warn = () => {};
