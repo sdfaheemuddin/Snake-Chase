@@ -68,34 +68,89 @@ body{margin:0;background:radial-gradient(circle at top,#193629 0%,#0d1914 65%,#0
 .stat-average{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;column-gap:3px;row-gap:0;margin-top:4px;color:#bce2bd;font-size:clamp(10px,2.5vw,13px);line-height:1.1;font-weight:650;letter-spacing:-.02em;text-align:center;font-variant-numeric:tabular-nums}
 .stat-average strong{color:#d9ffaf;font-weight:850}
 
-/* Desktop / tablet landscape: present the game inside a centered, capped
-   9:16 portrait frame. Phones remain edge-to-edge as before.
-   At 768px available height: 432 × 768. At taller heights: max 520 × 924. */
-@media (min-width:800px){
-  body{display:grid;place-items:center}
-  .app-shell{
-    --desktop-max-width:520px;
-    width:min(100%,var(--desktop-max-width),56.25vh);
-    width:min(100%,var(--desktop-max-width),56.25dvh);
-    height:min(100vh,924.45px);
-    height:min(100dvh,924.45px);
-    aspect-ratio:9 / 16;
-    margin-inline:auto;
-    border:1px solid #36533f;
-    border-radius:16px;
-    box-shadow:0 20px 70px rgba(0,0,0,.45);
-    container-type:inline-size;
-  }
-  /* cqw scales labels to the FRAME, not to the full desktop viewport. */
-  .stat-value{font-size:clamp(22px,5.2cqw,30px)}
-  .stat-label{font-size:clamp(10px,2.25cqw,13px)}
-  .stat-average{font-size:clamp(10px,2.3cqw,12px)}
-  .speed-row{font-size:clamp(13px,3.1cqw,18px)}
-  .speed-row b{font-size:clamp(16px,3.65cqw,21px)}
-  .speed-row>span:last-child{font-size:clamp(12px,3.1cqw,17px)}
-  .lives-display{font-size:clamp(13px,3cqw,17px)}
-  .lives-count{font-size:clamp(12px,2.65cqw,15px)}
-  .progress-caption{font-size:clamp(11px,2.6cqw,15px)}
-  .button{font-size:clamp(15px,3.65cqw,19px);min-height:clamp(46px,8dvh,70px)}
-  .install{font-size:clamp(12px,2.6cqw,15px);min-height:clamp(38px,5.8dvh,50px)}
+/* ONE portrait game frame for every device, including phones and landscape.
+   The width is limited by viewport width, available viewport height (9:16),
+   and the configurable maximum width. Height is derived from the same ratio.
+   Empty space around the game is letterboxed with the page background. */
+:root{
+  --game-frame-max-width:520px;
+  --game-frame-max-height:924.444444px; /* 520 × 16 / 9 */
+}
+body{
+  display:grid;
+  place-items:center;
+  width:100%;
+  height:100vh;
+  height:100dvh;
+}
+.app-shell{
+  width:min(100vw,56.25vh,var(--game-frame-max-width));
+  width:min(100vw,56.25dvh,var(--game-frame-max-width));
+  height:min(100vh,177.777778vw,var(--game-frame-max-height));
+  height:min(100dvh,177.777778vw,var(--game-frame-max-height));
+  aspect-ratio:9 / 16;
+  min-width:0;
+  min-height:0;
+  flex-shrink:0;
+  margin:auto;
+  padding:clamp(4px,1.2vw,10px);
+  gap:clamp(3px,0.7vh,9px);
+  border:1px solid #36533f;
+  border-radius:clamp(5px,2vw,16px);
+  box-shadow:0 16px 54px rgba(0,0,0,.35);
+  container-type:inline-size;
+}
+
+/* All font and control sizes are relative to the actual game frame (cqw),
+   not to the surrounding desktop/landscape viewport. */
+.brand h1{font-size:clamp(14px,4.2cqw,22px)}
+.brand p{font-size:clamp(10px,2.4cqw,12px)}
+.brand-icon{width:clamp(27px,8cqw,36px);height:clamp(27px,8cqw,36px)}
+.topbar{min-height:clamp(28px,8cqw,36px)}
+.stat-card{padding:clamp(4px,1.3cqw,9px) 2px}
+.stat-value{font-size:clamp(15px,5.7cqw,30px)}
+.stat-label{font-size:clamp(9px,2.4cqw,13px)}
+.stat-average{font-size:clamp(9px,2.2cqw,12px)}
+.speed-panel{padding:clamp(5px,2cqw,12px) clamp(6px,2.4cqw,14px)}
+.speed-row{font-size:clamp(12px,3.25cqw,19px);gap:clamp(3px,1.3cqw,10px)}
+.speed-row b{font-size:clamp(14px,3.8cqw,22px)}
+.speed-row>span:last-child{font-size:clamp(12px,3.1cqw,18px)}
+.lives-display{font-size:clamp(12px,2.9cqw,18px)}
+.lives-count{font-size:clamp(11px,2.6cqw,15px)}
+.progress-track{margin:clamp(4px,1.4cqw,11px) 0}
+.progress-caption{font-size:clamp(10px,2.5cqw,15px)}
+.button{font-size:clamp(13px,4cqw,20px);min-height:clamp(40px,11.8cqw,70px);padding:clamp(6px,1.7cqw,12px) clamp(6px,2cqw,18px)}
+.install{font-size:clamp(10px,2.7cqw,15px);min-height:clamp(30px,9cqw,49px);padding:5px 8px}
+.live-row{font-size:clamp(10px,2.7cqw,13px)}
+.board{border-radius:clamp(5px,2cqw,12px)}
+
+/* A very short landscape window results in a narrow portrait frame. Keep
+   its three speed indicators readable by giving the lives their own row. */
+@container (max-width:300px){
+  .brand p{display:none}
+  .brand h1{font-size:clamp(12px,4.8cqw,16px)}
+  .brand-icon{width:25px;height:25px}
+  .topbar{min-height:26px}
+  .stats-grid{gap:3px}
+  .stat-card{padding:3px 1px}
+  .stat-value{font-size:clamp(13px,5.8cqw,19px)}
+  .stat-label{font-size:clamp(8px,3cqw,10px)}
+  .stat-average{font-size:8px;column-gap:2px}
+  .speed-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);row-gap:2px;font-size:clamp(10px,3.8cqw,12px)}
+  .speed-row>span:first-child{grid-column:1;grid-row:1}
+  .speed-row>span:last-child{grid-column:2;grid-row:1;font-size:clamp(10px,3.7cqw,12px)}
+  .speed-row .lives-group{grid-column:1 / -1;grid-row:2;justify-self:center;gap:4px}
+  .speed-row b{font-size:clamp(12px,4.8cqw,15px)}
+  .progress-caption{font-size:clamp(9px,3.4cqw,11px)}
+  .progress-track{height:5px;margin:4px 0}
+  .action-row{gap:4px}
+  .action-row .button{font-size:clamp(11px,4.2cqw,13px);min-height:36px;padding:5px}
+  .install{font-size:10px;min-height:28px}
+  .live-row{font-size:10px}
+  .center-overlay{padding:6px}
+  .overlay-content{gap:5px}
+  .overlay-content h2{font-size:clamp(15px,6cqw,21px)}
+  .overlay-content p{font-size:clamp(10px,4cqw,13px)}
+  .overlay-symbol{font-size:24px}
+  .primary{font-size:clamp(12px,4.5cqw,16px)}
 }

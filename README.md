@@ -164,6 +164,8 @@ These launch assets add no analytics, trackers, login, or external scripts.
 
 The SCORE card now displays a compact **AVG/FOOD** value (total score divided by the number of successfully collected foods, rounded to one decimal place). Before collecting food it shows 0.0. Early zero-point taps do not increase the food count. The average is included in the game-over share PNG.
 
-## Desktop game frame
+## Fixed portrait aspect ratio on every screen
 
-On viewports at least 800px wide, Snake Chase is displayed in a centered portrait frame with a **9:16 aspect ratio**, capped at **520px wide × approximately 924px tall**. It scales down according to viewport height (for example, 432×768 in a 768px-tall browser), leaving the surrounding desktop background empty. HUD type scales with the portrait frame rather than the wide screen. Smaller mobile displays remain full-screen without aspect-ratio letterboxing. Modify `--desktop-max-width` in `styles.css` to change the desktop cap.
+Snake Chase always renders inside a centered **9:16 portrait frame**, on desktop, mobile portrait, and mobile landscape. The entire frame scales to fit both the screen width and height, with unused space displayed as the page background. There is no stretching, scrolling or clipping of the game container. The maximum size is **520 × 924.44 CSS px**; smaller screens preserve the same 9:16 ratio. On a 390×844 phone the frame is approximately 390×693px; on an 844×390 landscape device it is approximately 219×390px. Text and controls use frame-relative `cqw` sizing, with a compact arrangement when frames become very narrow.
+
+To change the size limit, update the `--game-frame-max-width` and proportional `--game-frame-max-height` variables at the end of `styles.css`; keep the ratio fixed at 9:16. The game renderer automatically resizes to the actual board inside the frame.
