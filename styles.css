@@ -67,3 +67,35 @@ body{margin:0;background:radial-gradient(circle at top,#193629 0%,#0d1914 65%,#0
 /* Average points per collected food within SCORE; preserve the four-card layout. */
 .stat-average{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;column-gap:3px;row-gap:0;margin-top:4px;color:#bce2bd;font-size:clamp(10px,2.5vw,13px);line-height:1.1;font-weight:650;letter-spacing:-.02em;text-align:center;font-variant-numeric:tabular-nums}
 .stat-average strong{color:#d9ffaf;font-weight:850}
+
+/* Desktop / tablet landscape: present the game inside a centered, capped
+   9:16 portrait frame. Phones remain edge-to-edge as before.
+   At 768px available height: 432 × 768. At taller heights: max 520 × 924. */
+@media (min-width:800px){
+  body{display:grid;place-items:center}
+  .app-shell{
+    --desktop-max-width:520px;
+    width:min(100%,var(--desktop-max-width),56.25vh);
+    width:min(100%,var(--desktop-max-width),56.25dvh);
+    height:min(100vh,924.45px);
+    height:min(100dvh,924.45px);
+    aspect-ratio:9 / 16;
+    margin-inline:auto;
+    border:1px solid #36533f;
+    border-radius:16px;
+    box-shadow:0 20px 70px rgba(0,0,0,.45);
+    container-type:inline-size;
+  }
+  /* cqw scales labels to the FRAME, not to the full desktop viewport. */
+  .stat-value{font-size:clamp(22px,5.2cqw,30px)}
+  .stat-label{font-size:clamp(10px,2.25cqw,13px)}
+  .stat-average{font-size:clamp(10px,2.3cqw,12px)}
+  .speed-row{font-size:clamp(13px,3.1cqw,18px)}
+  .speed-row b{font-size:clamp(16px,3.65cqw,21px)}
+  .speed-row>span:last-child{font-size:clamp(12px,3.1cqw,17px)}
+  .lives-display{font-size:clamp(13px,3cqw,17px)}
+  .lives-count{font-size:clamp(12px,2.65cqw,15px)}
+  .progress-caption{font-size:clamp(11px,2.6cqw,15px)}
+  .button{font-size:clamp(15px,3.65cqw,19px);min-height:clamp(46px,8dvh,70px)}
+  .install{font-size:clamp(12px,2.6cqw,15px);min-height:clamp(38px,5.8dvh,50px)}
+}

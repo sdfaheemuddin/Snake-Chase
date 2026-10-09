@@ -163,3 +163,7 @@ These launch assets add no analytics, trackers, login, or external scripts.
 ## Average points per food
 
 The SCORE card now displays a compact **AVG/FOOD** value (total score divided by the number of successfully collected foods, rounded to one decimal place). Before collecting food it shows 0.0. Early zero-point taps do not increase the food count. The average is included in the game-over share PNG.
+
+## Desktop game frame
+
+On viewports at least 800px wide, Snake Chase is displayed in a centered portrait frame with a **9:16 aspect ratio**, capped at **520px wide × approximately 924px tall**. It scales down according to viewport height (for example, 432×768 in a 768px-tall browser), leaving the surrounding desktop background empty. HUD type scales with the portrait frame rather than the wide screen. Smaller mobile displays remain full-screen without aspect-ratio letterboxing. Modify `--desktop-max-width` in `styles.css` to change the desktop cap.
