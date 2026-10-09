@@ -14,7 +14,7 @@ test('new game preserves original gameplay values', () => {
   assert.equal(game.currentSpeed, 100);
   assert.equal(game.targetSpeed, 100);
   assert.equal(game.speedLevel, 1);
-  assert.equal(game.scoringRadius, 120);
+  assert.equal(game.scoringRadius, 100);
   assert.ok(game.trail.length > 2);
 });
 
@@ -106,7 +106,7 @@ test('collision ends game and prevents additional scoring', () => {
   assert.equal(game.score, 0);
 });
 
-test('pause and resume do not advance the snake, and radius is validated', () => {
+test('pause and resume do not advance the snake; scoring radius cannot be changed', () => {
   const game = new SnakeGame();
   game.start();
   assert.equal(game.pause(), true);
@@ -115,7 +115,39 @@ test('pause and resume do not advance the snake, and radius is validated', () =>
   assert.deepEqual(game.head, oldHead);
   assert.equal(game.tap().accepted, false);
   assert.equal(game.resume(), true);
-  assert.equal(game.setScoringRadius(200), 160);
-  assert.equal(game.setScoringRadius(1), 70);
-  assert.throws(() => game.setScoringRadius('not a radius'), /finite number/);
+  assert.equal(game.scoringRadius, 100);
+  assert.equal(typeof game.setScoringRadius, 'undefined');
+});
+
+test('full-height playfield accommodates portrait screens without resetting a running snake', () => {
+  const game = new SnakeGame({ random: () => 0.3 });
+  game.setBoardHeight(650);
+  game.start();
+  assert.equal(game.boardHeight, 650);
+  assert.equal(game.head.y, 325);
+  assert.equal(game.food.y, 325);
+  const previousX = game.head.x;
+  const originalTrailCount = game.trail.length;
+  game.setBoardHeight(500);
+  assert.equal(game.boardHeight, 500);
+  assert.equal(game.head.x, previousX);
+  assert.equal(game.head.y, 250);
+  assert.equal(game.trail.length, originalTrailCount);
+  game.head = { x: game.food.x - 50, y: game.food.y };
+  game.tap();
+  assert.ok(game.food.y >= 55 && game.food.y <= game.boardHeight - 55);
+  assert.equal(game.scoringRadius, 100);
+  assert.throws(() => game.setBoardHeight(10), /Invalid game board dimensions/);
+});
+
+test('landscape full-screen board expands horizontally without distorting the snake', () => {
+  const game = new SnakeGame();
+  game.setBoardDimensions(800, 420);
+  game.start();
+  assert.equal(game.boardWidth, 800);
+  assert.equal(game.boardHeight, 420);
+  assert.equal(game.head.x, 320);
+  assert.equal(game.food.x, 515);
+  game.tap();
+  assert.ok(game.food.x >= 55 && game.food.x <= 745);
 });

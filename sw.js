@@ -1,7 +1,7 @@
 /* Offline-first service worker. Every asset URL is relative to this PWA's scope,
  * so GitHub Pages works at both / and /repository-name/ without edits. */
 const CACHE_PREFIX = 'snake-chase-pwa-';
-const CACHE_NAME = `${CACHE_PREFIX}v1`;
+const CACHE_NAME = `${CACHE_PREFIX}v2`;
 const FILES = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const FILES = [
   './src/config.js',
   './src/game-engine.js',
   './src/renderer.js',
+  './src/share.js',
   './src/app.js',
   './assets/favicon.svg',
   './assets/icon-192.png',

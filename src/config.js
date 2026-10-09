@@ -1,9 +1,7 @@
-// Central gameplay configuration. Speeds are logical pixels per second.
+// Central gameplay configuration. Distances use a 420-unit logical board width.
 export const GAME_CONFIG = Object.freeze({
   boardSize: 420,
-  initialScoringRadius: 120,
-  minimumScoringRadius: 70,
-  maximumScoringRadius: 160,
+  scoringRadius: 100, // Fixed; visually scales to the player's device width.
   collisionRadius: 23,
   maximumPointsPerTap: 100,
   initialSpeed: 100,

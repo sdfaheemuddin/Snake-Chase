@@ -1,10 +1,11 @@
 import { GAME_CONFIG } from './config.js';
 import { SnakeGame } from './game-engine.js';
 import { GameRenderer } from './renderer.js';
+import { buildScreenSnapshot, canvasToPngFile } from './share.js';
 
 const $ = id => document.getElementById(id);
 const game = new SnakeGame();
-const renderer = new GameRenderer($('game-canvas'), GAME_CONFIG.boardSize);
+const renderer = new GameRenderer($('game-canvas'), GAME_CONFIG.boardSize, (width, height) => game.setBoardDimensions(width, height));
 const overlay = $('game-overlay');
 const popup = $('points-popup');
 let best = readBest();
@@ -26,12 +27,12 @@ function persistBest() {
   catch (error) { console.warn('Could not save high score:', error); }
 }
 
-function showOverlay(symbol, title, description, buttonLabel, allowSharing = false) {
+function showOverlay(symbol, title, description, buttonLabel, gameOver = false) {
+  overlay.classList.toggle('game-over', gameOver);
   $('overlay-symbol').textContent = symbol;
   $('overlay-title').textContent = title;
   $('overlay-message').textContent = description;
   $('start-button').textContent = buttonLabel;
-  $('gameover-share').hidden = !allowSharing;
   overlay.hidden = false;
 }
 
@@ -53,7 +54,6 @@ function syncUI() {
   $('progress-fill').style.width = `${(game.levelProgress / GAME_CONFIG.foodsPerSpeedLevel) * 100}%`;
   $('progress-text').textContent = `${game.levelProgress} / ${GAME_CONFIG.foodsPerSpeedLevel} foods`;
   $('distance').textContent = `${Math.round(game.distanceToFood)} px away`;
-  $('radius-label').textContent = `${game.scoringRadius} px`;
 
   const status = game.status === 'playing'
     ? game.availablePoints >= 75 ? 'Perfect zone — TAP NOW!'
@@ -92,6 +92,7 @@ function start() {
   game.start();
   overlay.hidden = true;
   $('pause-button').textContent = 'Ⅱ Pause';
+  popup.classList.remove('animate');
   syncUI();
   renderer.render(game);
   animationId = requestAnimationFrame(loop);
@@ -105,9 +106,12 @@ function endGame() {
   showOverlay('💥', 'GAME OVER',
     `You scored ${game.score} points across ${game.foods} collected foods. You reached speed level ${game.speedLevel}.`,
     '↻ Play Again', true);
+  $('pause-button').textContent = '↻ Play Again';
+  popup.classList.remove('animate');
 }
 
 function togglePause() {
+  if (game.status === 'gameover') { start(); return; }
   if (game.pause()) {
     stopLoop();
     $('pause-button').textContent = '▶ Resume';
@@ -146,24 +150,55 @@ function tap() {
 }
 
 function canonicalGameUrl() {
-  const url = new URL('./', window.location.href);
+  const url = new URL('./', document.baseURI);
   url.search = '';
   url.hash = '';
   return url.href;
 }
 
-function shareWhatsApp() {
-  const title = 'Snake Chase';
-  const message = `I scored ${game.score} points and collected ${game.foods} foods in ${title}! Can you beat me? Play here: ${canonicalGameUrl()}`;
-  // The official click-to-chat URL opens WhatsApp or WhatsApp Web, where available.
-  const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
-  const opened = window.open(url, '_blank', 'noopener,noreferrer');
-  if (!opened) window.location.href = url;
+async function shareImage() {
+  let snapshot;
+  let file;
+  try {
+    snapshot = buildScreenSnapshot($('app'), $('game-canvas'));
+    file = canvasToPngFile(snapshot);
+  } catch (error) {
+    console.error('Snapshot creation failed:', error);
+    showToast('Could not capture the game screen. Please try again.');
+    return;
+  }
+
+  // Native share sheet: allows the player to pick ANY installed compatible app.
+  // Call share() without an intervening await to preserve the user gesture.
+  try {
+    if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+      await navigator.share({
+        files: [file],
+        title: 'Snake Chase',
+        text: `I scored ${game.score} points in Snake Chase! Play: ${canonicalGameUrl()}`,
+      });
+      return;
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') return; // User canceled the native chooser.
+    console.warn('Native image sharing unavailable:', error);
+  }
+
+  // Desktop and browsers without file sharing: let the user save the actual PNG.
+  const url = URL.createObjectURL(file);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = file.name;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  showToast('Image saved. You can share it from your gallery or files.');
 }
 
 function updateNetworkIndicator() {
-  $('network-status').classList.toggle('offline', !navigator.onLine);
-  $('network-text').textContent = navigator.onLine ? 'READY' : 'OFFLINE';
+  // Kept for future connectivity messaging; the full-screen UI has no status badge.
+  if (!navigator.onLine) console.info('Snake Chase: playing offline.');
 }
 
 async function installApp() {
@@ -206,12 +241,7 @@ $('board').addEventListener('keydown', event => {
 });
 $('pause-button').addEventListener('click', togglePause);
 $('restart-button').addEventListener('click', start);
-$('radius-slider').addEventListener('input', event => {
-  try { game.setScoringRadius(event.target.value); syncUI(); renderer.render(game); }
-  catch (error) { showToast(error.message); }
-});
-$('whatsapp-button').addEventListener('click', shareWhatsApp);
-$('gameover-share').addEventListener('click', event => { event.stopPropagation(); shareWhatsApp(); });
+$('share-button').addEventListener('click', shareImage);
 $('install-button').addEventListener('click', installApp);
 window.addEventListener('keydown', event => {
   if (event.code !== 'Space' || event.repeat) return;
@@ -242,8 +272,7 @@ window.SnakeChaseAPI = Object.freeze({
   pause: () => { if (game.status === 'playing') togglePause(); },
   resume: () => { if (game.status === 'paused') togglePause(); },
   tap,
-  setScoringRadius: value => { const applied = game.setScoringRadius(value); $('radius-slider').value = String(applied); syncUI(); renderer.render(game); return applied; },
-  shareWhatsApp,
+  shareImage,
 });
 
 updateNetworkIndicator();

@@ -13,7 +13,9 @@ export class SnakeGame {
   constructor({ config = GAME_CONFIG, random = Math.random } = {}) {
     this.config = config;
     this.random = random;
-    this.scoringRadius = config.initialScoringRadius;
+    this.scoringRadius = config.scoringRadius;
+    this.boardWidth = config.boardSize;
+    this.boardHeight = config.boardSize;
     this.reset();
   }
 
@@ -25,8 +27,8 @@ export class SnakeGame {
     this.currentSpeed = c.initialSpeed;
     this.targetSpeed = c.initialSpeed;
     this.snakeLength = c.initialSnakeLength;
-    this.head = { x: 130, y: c.boardSize / 2 };
-    this.food = { x: 325, y: c.boardSize / 2 };
+    this.head = { x: this.boardWidth / 2 - 80, y: this.boardHeight / 2 };
+    this.food = { x: this.boardWidth / 2 + 115, y: this.boardHeight / 2 };
     this.direction = directionTo(this.head, this.food);
     this.trail = [];
     for (let offset = c.initialSnakeLength; offset >= 0; offset -= 5) {
@@ -52,12 +54,30 @@ export class SnakeGame {
     return true;
   }
 
-  setScoringRadius(value) {
-    const parsed = Number(value);
-    if (!Number.isFinite(parsed)) throw new TypeError('Scoring radius must be a finite number.');
-    this.scoringRadius = Math.max(this.config.minimumScoringRadius, Math.min(this.config.maximumScoringRadius, parsed));
-    return this.scoringRadius;
+  /** Keep the board fully usable in both portrait and landscape without stretching it. */
+  setBoardDimensions(width, height) {
+    if (![width, height].every(v => Number.isFinite(v) && v >= 160)) {
+      throw new RangeError('Invalid game board dimensions.');
+    }
+    const previousWidth = this.boardWidth;
+    const previousHeight = this.boardHeight;
+    if (Math.abs(previousWidth - width) < 0.5 && Math.abs(previousHeight - height) < 0.5) return;
+    this.boardWidth = width;
+    this.boardHeight = height;
+    if (this.status === 'ready') { this.reset(); return; }
+
+    // Maintain the current snake, target and trail across orientation changes.
+    const scaleX = width / previousWidth;
+    const scaleY = height / previousHeight;
+    this.head.x *= scaleX;
+    this.head.y *= scaleY;
+    this.food.x *= scaleX;
+    this.food.y *= scaleY;
+    for (const part of this.trail) { part.x *= scaleX; part.y *= scaleY; }
+    this.direction = directionTo(this.head, this.food);
   }
+
+  setBoardHeight(value) { this.setBoardDimensions(this.boardWidth, value); }
 
   get distanceToFood() { return distance(this.head, this.food); }
   get speedLevel() { return Math.floor(this.foods / this.config.foodsPerSpeedLevel) + 1; }
@@ -118,7 +138,8 @@ export class SnakeGame {
   placeNextFood(previousFood) {
     const c = this.config;
     const edgePadding = 55;
-    const range = c.boardSize - 2 * edgePadding;
+    const rangeX = this.boardWidth - 2 * edgePadding;
+    const rangeY = this.boardHeight - 2 * edgePadding;
     const minimumDistance = Math.max(155, this.scoringRadius + 25);
     let selected = null;
     let best = null;
@@ -126,8 +147,8 @@ export class SnakeGame {
 
     for (let attempt = 0; attempt < 160; attempt += 1) {
       const candidate = {
-        x: edgePadding + this.random() * range,
-        y: edgePadding + this.random() * range,
+        x: edgePadding + this.random() * rangeX,
+        y: edgePadding + this.random() * rangeY,
       };
       if (distance(this.head, candidate) < minimumDistance || distance(previousFood, candidate) < 75) continue;
       if (this.trail.some((point, index) => index % 9 === 0 && distance(candidate, point) < 31)) continue;
@@ -142,8 +163,8 @@ export class SnakeGame {
     if (!selected) selected = best;
     if (!selected) {
       const corners = [
-        { x: 60, y: 60 }, { x: c.boardSize - 60, y: 60 },
-        { x: 60, y: c.boardSize - 60 }, { x: c.boardSize - 60, y: c.boardSize - 60 },
+        { x: 60, y: 60 }, { x: this.boardWidth - 60, y: 60 },
+        { x: 60, y: this.boardHeight - 60 }, { x: this.boardWidth - 60, y: this.boardHeight - 60 },
       ];
       corners.sort((a, b) => distance(this.head, b) - distance(this.head, a));
       selected = corners[0];
@@ -214,6 +235,8 @@ export class SnakeGame {
       availablePoints: this.availablePoints,
       distanceToFood: this.distanceToFood,
       scoringRadius: this.scoringRadius,
+      boardWidth: this.boardWidth,
+      boardHeight: this.boardHeight,
       head: copyPoint(this.head),
       food: copyPoint(this.food),
       bodyLength: this.snakeLength,

@@ -1,21 +1,42 @@
 /** Canvas view: renders the game model without changing its state. */
 export class GameRenderer {
-  constructor(canvas, boardSize) {
+  constructor(canvas, boardSize, onResize = () => {}) {
     if (!(canvas instanceof HTMLCanvasElement)) throw new TypeError('Game canvas is missing.');
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     if (!this.ctx) throw new Error('Your browser does not support Canvas 2D.');
     this.boardSize = boardSize;
+    this.logicalWidth = boardSize;
+    this.logicalHeight = boardSize;
+    this.onResize = onResize;
     this.resize();
-    window.addEventListener('resize', () => this.resize());
+    if ('ResizeObserver' in window) {
+      this.observer = new ResizeObserver(() => this.resize());
+      this.observer.observe(canvas.parentElement);
+    } else {
+      window.addEventListener('resize', () => this.resize());
+    }
   }
 
   resize() {
+    const { width, height } = this.canvas.parentElement.getBoundingClientRect();
+    if (width < 20 || height < 20) return;
+    // Scale uniformly by the short screen side, expanding the other world axis.
+    const cssScale = Math.min(width, height) / this.boardSize;
+    const logicalWidth = width / cssScale;
+    const logicalHeight = height / cssScale;
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
-    const pixels = Math.round(this.boardSize * dpr);
-    this.canvas.width = pixels;
-    this.canvas.height = pixels;
-    this.ctx.setTransform(pixels / this.boardSize, 0, 0, pixels / this.boardSize, 0, 0);
+    const w = Math.max(1, Math.round(width * dpr));
+    const h = Math.max(1, Math.round(height * dpr));
+    if (this.canvas.width === w && this.canvas.height === h) return;
+    this.canvas.width = w;
+    this.canvas.height = h;
+    const scale = w / logicalWidth;
+    this.ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    this.logicalWidth = logicalWidth;
+    this.logicalHeight = logicalHeight;
+    this.onResize(logicalWidth, logicalHeight);
+    if (this.lastGame) this.render(this.lastGame);
   }
 
   circle(x, y, radius, fill) {
@@ -28,19 +49,21 @@ export class GameRenderer {
 
   render(game, timestamp = 0) {
     const ctx = this.ctx;
-    const S = this.boardSize;
+    this.lastGame = game;
+    const W = this.logicalWidth;
+    const H = this.logicalHeight;
     const { food, head, direction, trail } = game;
     const c = game.config;
     const radius = game.scoringRadius;
 
     ctx.fillStyle = '#10241b';
-    ctx.fillRect(0, 0, S, S);
+    ctx.fillRect(0, 0, W, H);
     ctx.beginPath();
     ctx.strokeStyle = 'rgba(163,215,169,.07)';
     ctx.lineWidth = 1;
-    for (let v = 20; v < S; v += 20) {
-      ctx.moveTo(v, 0); ctx.lineTo(v, S);
-      ctx.moveTo(0, v); ctx.lineTo(S, v);
+    for (let v = 20; v < Math.max(W, H); v += 20) {
+      if (v < W) { ctx.moveTo(v, 0); ctx.lineTo(v, H); }
+      if (v < H) { ctx.moveTo(0, v); ctx.lineTo(W, v); }
     }
     ctx.stroke();
 
