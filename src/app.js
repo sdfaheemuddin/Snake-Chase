@@ -1,7 +1,7 @@
-import { loadGameConfig } from './config.js?v=7';
-import { SnakeGame } from './game-engine.js?v=7';
-import { GameRenderer } from './renderer.js?v=7';
-import { buildScreenSnapshot, canvasToPngFile } from './share.js?v=7';
+import { loadGameConfig } from './config.js?v=8';
+import { SnakeGame } from './game-engine.js?v=8';
+import { GameRenderer } from './renderer.js?v=8';
+import { buildScreenSnapshot, canvasToPngFile } from './share.js?v=8';
 
 const $ = id => document.getElementById(id);
 const GAME_CONFIG = await loadGameConfig();
@@ -139,7 +139,6 @@ function togglePause() {
 
 function flashPoints(result) {
   popup.classList.remove('animate');
-  void popup.offsetWidth; // Restart animation even on rapid consecutive taps.
   popup.textContent = result.missed ? `MISS! ${result.lives} ♥ LEFT`
     : result.burstStarted ? `SPEED BURST! +${result.points}`
     : result.speedUp ? `SPEED UP! +${result.points}`
@@ -147,6 +146,25 @@ function flashPoints(result) {
       : result.points >= 90 ? `+${result.points} PERFECT!` : `+${result.points}`;
   popup.style.color = result.missed ? '#ff918b' : result.speedUp || result.points >= 75 ? '#bfff9b'
     : result.points > 0 ? '#ffd683' : '#e1e7dd';
+  // Preserve the same rising/scaling score animation, but start it directly
+  // above the snake's head when the tap occurred. The popup stays at that
+  // location even while the snake immediately turns toward the next food.
+  const display = GAME_CONFIG.headScore;
+  if (display.enabled && display.tapAnimationAtHead) {
+    const point = renderer.screenPoint(result.oldHead);
+    const bounds = $('board').getBoundingClientRect();
+    const popupWidth = popup.offsetWidth;
+    const margin = 8;
+    const minX = popupWidth / 2 + margin;
+    const maxX = Math.max(minX, bounds.width - popupWidth / 2 - margin);
+    popup.style.left = `${Math.max(minX, Math.min(maxX, point.x))}px`;
+    popup.style.top = `${Math.max(34, Math.min(bounds.height - 30, point.y - 23))}px`;
+  } else {
+    // Legacy position, selectable without editing JavaScript.
+    popup.style.left = '50%';
+    popup.style.top = '27%';
+  }
+  void popup.offsetWidth; // Restart animation even on rapid consecutive taps.
   popup.classList.add('animate');
 }
 
@@ -301,7 +319,7 @@ window.SnakeChaseAPI = Object.freeze({
   resume: () => { if (game.status === 'paused') togglePause(); },
   tap,
   shareImage,
-  getConfig: () => ({...GAME_CONFIG, speedBursts: {...GAME_CONFIG.speedBursts}, shrinkingRadius: {...GAME_CONFIG.shrinkingRadius}}),
+  getConfig: () => ({...GAME_CONFIG, speedBursts: {...GAME_CONFIG.speedBursts}, shrinkingRadius: {...GAME_CONFIG.shrinkingRadius}, headScore: {...GAME_CONFIG.headScore}}),
 });
 
 updateNetworkIndicator();

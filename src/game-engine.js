@@ -1,4 +1,4 @@
-import { GAME_CONFIG } from './config.js?v=7';
+import { GAME_CONFIG } from './config.js?v=8';
 
 const copyPoint = point => ({ x: point.x, y: point.y });
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);

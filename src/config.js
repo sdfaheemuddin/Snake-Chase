@@ -14,6 +14,12 @@ export const GAME_CONFIG = Object.freeze({
   growthPerFood: 4,
   maximumSnakeLength: 250,
   lives: 3,
+  headScore: Object.freeze({
+    enabled: true,             // Show live points possible beside the moving head.
+    tapAnimationAtHead: true,  // Start the existing scoring animation at the tap-time head.
+    showZero: true,            // Show +0 before the snake enters the scoring circle.
+    offset: 38,                // Logical screen units above the snake's head.
+  }),
   speedBursts: Object.freeze({
     enabled: true,
     startAfterSpeedLevel: 3,
@@ -49,6 +55,8 @@ export function resolveGameConfig(input = {}) {
   const b = GAME_CONFIG;
   const burst = input.speedBursts && typeof input.speedBursts === 'object' && !Array.isArray(input.speedBursts)
     ? input.speedBursts : {};
+  const headScore = input.headScore && typeof input.headScore === 'object' && !Array.isArray(input.headScore)
+    ? input.headScore : {};
   const shrink = input.shrinkingRadius && typeof input.shrinkingRadius === 'object' && !Array.isArray(input.shrinkingRadius)
     ? input.shrinkingRadius : {};
   const maximumSpeed = numberInRange(input.maximumSpeed, b.maximumSpeed, 130, 500);
@@ -68,6 +76,12 @@ export function resolveGameConfig(input = {}) {
     speedIncreasePerLevel: numberInRange(input.speedIncreasePerLevel, b.speedIncreasePerLevel, 0, 60),
     foodsPerSpeedLevel: numberInRange(input.foodsPerSpeedLevel, b.foodsPerSpeedLevel, 1, 50, true),
     lives: numberInRange(input.lives, b.lives, 1, 9, true),
+    headScore: Object.freeze({
+      enabled: booleanOr(headScore.enabled, b.headScore.enabled),
+      tapAnimationAtHead: booleanOr(headScore.tapAnimationAtHead, b.headScore.tapAnimationAtHead),
+      showZero: booleanOr(headScore.showZero, b.headScore.showZero),
+      offset: numberInRange(headScore.offset, b.headScore.offset, 22, 90),
+    }),
     speedBursts: Object.freeze({
       enabled: booleanOr(burst.enabled, b.speedBursts.enabled),
       startAfterSpeedLevel: numberInRange(burst.startAfterSpeedLevel,

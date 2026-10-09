@@ -39,6 +39,48 @@ export class GameRenderer {
     if (this.lastGame) this.render(this.lastGame);
   }
 
+  /** Screen CSS coordinates relative to the board; used for tap-origin effects. */
+  screenPoint(point) {
+    const canvasBounds = this.canvas.getBoundingClientRect();
+    const boardBounds = this.canvas.parentElement.getBoundingClientRect();
+    return {
+      x: canvasBounds.left - boardBounds.left + point.x * canvasBounds.width / this.logicalWidth,
+      y: canvasBounds.top - boardBounds.top + point.y * canvasBounds.height / this.logicalHeight,
+    };
+  }
+
+  /** The live number is earned on tap, so it follows the head rather than the food. */
+  drawHeadScore(game) {
+    const display = game.config.headScore;
+    if (!display?.enabled || !['playing', 'paused'].includes(game.status)) return;
+    const points = game.availablePoints;
+    if (points === 0 && !display.showZero) return;
+
+    const ctx = this.ctx;
+    const label = `+${points}`;
+    const fontSize = 19;
+    const padding = 10;
+    ctx.save();
+    ctx.font = `800 ${fontSize}px system-ui, sans-serif`;
+    const width = ctx.measureText(label).width + padding * 2;
+    const height = 31;
+    const x = Math.max(5, Math.min(this.logicalWidth - width - 5, game.head.x - width / 2));
+    const top = game.head.y - display.offset - height / 2;
+    const y = top < 5 ? game.head.y + 18 : Math.min(top, this.logicalHeight - height - 5);
+    ctx.beginPath();
+    ctx.roundRect(x, y, width, height, 10);
+    ctx.fillStyle = points >= 75 ? 'rgba(35,78,42,.94)' : 'rgba(13,40,27,.88)';
+    ctx.fill();
+    ctx.lineWidth = 1.3;
+    ctx.strokeStyle = points >= 75 ? '#b0ff8e' : points ? '#e2c875' : '#789b84';
+    ctx.stroke();
+    ctx.fillStyle = points >= 75 ? '#c5ffac' : points ? '#ffe199' : '#b4cabc';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, x + width / 2, y + height / 2 + 1);
+    ctx.restore();
+  }
+
   circle(x, y, radius, fill) {
     const ctx = this.ctx;
     ctx.beginPath();
@@ -148,5 +190,6 @@ export class GameRenderer {
       ctx.stroke();
       ctx.restore();
     }
+    this.drawHeadScore(game);
   }
 }

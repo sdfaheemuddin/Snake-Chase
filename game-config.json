@@ -18,5 +18,11 @@
     "reductionPer10Foods": 5,
     "minimumRadius": 75,
     "startAfterSpeedLevel": 3
+  },
+  "headScore": {
+    "enabled": true,
+    "tapAnimationAtHead": true,
+    "showZero": true,
+    "offset": 38
   }
 }

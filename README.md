@@ -11,6 +11,8 @@ A shareable, offline-capable snake timing game. No npm install or backend needed
 - Only positive-point taps count as **collected foods**. Each early tap loses one of 3 lives and still redirects the snake, except the third miss ends the game.
 - After **10, 20, 30, ...** collected foods, base target speed rises by **12 logical units/s**, from **130** to a maximum base speed of **220**. Speed eases gradually toward each target. Starting at **speed level 4** (30 foods), unpredictable **1.5× speed bursts** occur after random intervals of **2–5 seconds of active gameplay**. Each burst lasts **600 ms** and turns the snake **orange-gold with a bright glow**. The burst speed is 1.5× the *current* speed and can temporarily exceed the base cap. Time spent paused does not count toward a burst.
 - The game ends if the snake reaches the food or all three lives are lost.
+- **Live tap value** (`+0` to `+100`) follows the snake head. The score popup animates from the head's position at tap time, with the same rising effect. Configure these independently using `headScore` in `game-config.json`.
+- **Foods per speed level** is `foodsPerSpeedLevel` in `game-config.json` (default 10). Changing it also changes how soon speed levels, bursts, and shrinking radius milestones are reached.
 - Best score is stored in this browser on this device, not synced between devices.
 
 ## Publish on GitHub Pages (recommended)

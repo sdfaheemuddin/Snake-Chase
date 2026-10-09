@@ -266,3 +266,37 @@ test('radius cutoff is configurable through public game JSON', () => {
   for (let i=0; i<50; i++) accurateTap(game);
   assert.equal(game.scoringRadius, 95); // Reduction starts when level 6 begins
 });
+
+test('head-score settings are public, individually configurable, and validated', () => {
+  const config = resolveGameConfig(getJson());
+  assert.deepEqual(config.headScore, {
+    enabled: true, tapAnimationAtHead: true, showZero: true, offset: 38,
+  });
+  assert.equal(Object.isFrozen(config.headScore), true);
+  const disabled = resolveGameConfig({headScore: {enabled: false, tapAnimationAtHead: false, showZero: false, offset: 55}});
+  assert.equal(disabled.headScore.enabled, false);
+  assert.equal(disabled.headScore.tapAnimationAtHead, false);
+  assert.equal(disabled.headScore.showZero, false);
+  assert.equal(disabled.headScore.offset, 55);
+  assert.equal(resolveGameConfig({headScore: {offset: 1000, enabled: 'no'}}).headScore.offset, 38);
+  assert.equal(resolveGameConfig({headScore: {enabled: 'no'}}).headScore.enabled, true);
+});
+
+test('foodsPerSpeedLevel is configurable and drives speed, burst and radius milestones', () => {
+  const config = resolveGameConfig({...getJson(), foodsPerSpeedLevel: 5});
+  const game = new SnakeGame({config, random: () => .5});
+  game.start();
+  for (let i=1; i<=20; i++) {
+    const result = accurateTap(game);
+    assert.equal(result.speedUp, i % 5 === 0);
+    assert.equal(game.speedLevel, Math.floor(i/5) + 1);
+    if (i < 15) {
+      assert.equal(game.scoringRadius, 100);
+      assert.equal(game.burstDelaySeconds, null);
+    }
+  }
+  assert.equal(game.targetSpeed, 178);
+  assert.equal(game.scoringRadius, 90);
+  assert.ok(game.burstDelaySeconds >= 2 && game.burstDelaySeconds <= 5);
+  assert.equal(resolveGameConfig({foodsPerSpeedLevel: 500}).foodsPerSpeedLevel, 10);
+});
