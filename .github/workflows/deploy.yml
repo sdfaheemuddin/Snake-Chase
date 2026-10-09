@@ -1,0 +1,45 @@
+name: Deploy Snake Chase to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out game
+        uses: actions/checkout@v4
+      - name: Run gameplay tests
+        run: node --test tests/*.test.mjs
+      - name: Render app icons from SVG sources
+        run: |
+          python -m pip install --quiet cairosvg
+          python tools/generate_icons.py
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Prepare static site
+        run: |
+          mkdir -p _site
+          cp index.html styles.css manifest.webmanifest sw.js .nojekyll _site/
+          cp -R src assets _site/
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

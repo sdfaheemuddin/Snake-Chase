@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1d5035"/><stop offset="1" stop-color="#0b2117"/></linearGradient>
+    <linearGradient id="snake" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d0ffa2"/><stop offset=".65" stop-color="#76df8a"/><stop offset="1" stop-color="#27946d"/></linearGradient>
+    <radialGradient id="apple" cx=".3" cy=".2" r=".95"><stop stop-color="#ffb19a"/><stop offset=".35" stop-color="#fc6153"/><stop offset="1" stop-color="#cb303e"/></radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="184" fill="none" stroke="#72bd7b" stroke-opacity=".15" stroke-width="3" stroke-dasharray="8 14"/>
+  <!-- Broad sinuous body with distinct head; recognizable at launcher-icon size. -->
+  <path d="M153 350 C100 298 121 214 189 214 C252 214 261 296 326 296 C392 296 400 190 337 148 C306 127 262 130 244 146" fill="none" stroke="#123b2b" stroke-width="73" stroke-linecap="round"/>
+  <path d="M153 350 C100 298 121 214 189 214 C252 214 261 296 326 296 C392 296 400 190 337 148 C306 127 262 130 244 146" fill="none" stroke="url(#snake)" stroke-width="59" stroke-linecap="round"/>
+  <path d="M151 338 C125 294 138 236 185 236" fill="none" stroke="#d7ffb4" stroke-opacity=".42" stroke-width="8" stroke-linecap="round"/>
+  <!-- Snake face. -->
+  <circle cx="246" cy="145" r="37" fill="#bbfa96"/>
+  <circle cx="238" cy="134" r="6.8" fill="#183d2b"/>
+  <circle cx="264" cy="135" r="6.8" fill="#183d2b"/>
+  <circle cx="239.5" cy="132.5" r="2.2" fill="#fff"/>
+  <circle cx="265.5" cy="133.5" r="2.2" fill="#fff"/>
+  <!-- Target apple floating above the bottom turn. -->
+  <circle cx="260" cy="377" r="49" fill="url(#apple)" stroke="#123c27" stroke-width="8"/>
+  <ellipse cx="245" cy="361" rx="12" ry="8" fill="#ffd4be" opacity=".7" transform="rotate(-25 245 361)"/>
+  <path d="M263 334 Q261 316 273 306" fill="none" stroke="#735333" stroke-width="8" stroke-linecap="round"/>
+  <ellipse cx="288" cy="313" rx="23" ry="11" fill="#a5f386" transform="rotate(-28 288 313)"/>
+</svg>

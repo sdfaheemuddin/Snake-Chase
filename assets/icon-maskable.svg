@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#10291c"/>
+  <!-- Centered artwork entirely within Android maskable-icon safe circle. -->
+  <g transform="translate(77 77) scale(.70)">
+    <defs>
+      <linearGradient id="ms" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d4ffa1"/><stop offset="1" stop-color="#3bbc82"/></linearGradient>
+    </defs>
+    <path d="M153 350 C100 298 121 214 189 214 C252 214 261 296 326 296 C392 296 400 190 337 148 C306 127 262 130 244 146" fill="none" stroke="#195037" stroke-width="78" stroke-linecap="round"/>
+    <path d="M153 350 C100 298 121 214 189 214 C252 214 261 296 326 296 C392 296 400 190 337 148 C306 127 262 130 244 146" fill="none" stroke="url(#ms)" stroke-width="64" stroke-linecap="round"/>
+    <circle cx="246" cy="145" r="38" fill="#c6fa9c"/>
+    <circle cx="238" cy="134" r="7" fill="#193f2c"/><circle cx="265" cy="135" r="7" fill="#193f2c"/>
+    <circle cx="261" cy="376" r="49" fill="#ef6152" stroke="#1d4a30" stroke-width="9"/>
+    <path d="M263 334 Q261 316 273 306" fill="none" stroke="#705236" stroke-width="8"/>
+    <ellipse cx="288" cy="313" rx="23" ry="12" fill="#a5ec85" transform="rotate(-28 288 313)"/>
+  </g>
+</svg>
