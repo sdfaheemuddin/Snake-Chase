@@ -58,26 +58,23 @@ export class GameRenderer {
 
     const ctx = this.ctx;
     const label = `+${points}`;
-    const fontSize = 19;
-    const padding = 10;
+    const fontSize = 22;
     ctx.save();
     ctx.font = `800 ${fontSize}px system-ui, sans-serif`;
-    const width = ctx.measureText(label).width + padding * 2;
-    const height = 31;
-    const x = Math.max(5, Math.min(this.logicalWidth - width - 5, game.head.x - width / 2));
-    const top = game.head.y - display.offset - height / 2;
-    const y = top < 5 ? game.head.y + 18 : Math.min(top, this.logicalHeight - height - 5);
-    ctx.beginPath();
-    ctx.roundRect(x, y, width, height, 10);
-    ctx.fillStyle = points >= 75 ? 'rgba(35,78,42,.94)' : 'rgba(13,40,27,.88)';
-    ctx.fill();
-    ctx.lineWidth = 1.3;
-    ctx.strokeStyle = points >= 75 ? '#b0ff8e' : points ? '#e2c875' : '#789b84';
-    ctx.stroke();
-    ctx.fillStyle = points >= 75 ? '#c5ffac' : points ? '#ffe199' : '#b4cabc';
+    const halfWidth = ctx.measureText(label).width / 2;
+    // Display only the score text. Keep it in-bounds, even near screen edges.
+    const x = Math.max(halfWidth + 5, Math.min(this.logicalWidth - halfWidth - 5, game.head.x));
+    const preferredY = game.head.y - display.offset;
+    const y = preferredY < fontSize / 2 + 5
+      ? Math.min(this.logicalHeight - fontSize / 2 - 5, game.head.y + 25)
+      : Math.min(this.logicalHeight - fontSize / 2 - 5, preferredY);
+    ctx.fillStyle = points >= 75 ? '#c5ffac' : points ? '#ffe199' : '#d5e5d7';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(label, x + width / 2, y + height / 2 + 1);
+    // A subtle text shadow maintains contrast without a visible box or badge.
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    ctx.shadowBlur = 5;
+    ctx.fillText(label, x, y);
     ctx.restore();
   }
 

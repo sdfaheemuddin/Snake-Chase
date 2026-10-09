@@ -140,6 +140,8 @@ Pages access for a private repository depends on your GitHub plan and settings.
 
 The bottom-right food-distance label is hidden in both gameplay and shared PNGs; distance still drives scoring and collisions.
 
+The live points label beside the snake's head is rendered as text only, without a background box; the existing tap-score animation is unchanged.
+
 ## Speed and score release notes
 
 - Three rapid early taps now correctly consume all three lives; no tap debounce discards intentional misses.
