@@ -30,7 +30,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
   <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="./styles.css?v=10">
+  <link rel="stylesheet" href="./styles.css?v=12">
   <title>Snake Chase — Timing Challenge</title>
 </head>
 <body>
@@ -44,7 +44,7 @@
     </header>
 
     <section class="stats-grid" aria-label="Game statistics">
-      <div class="stat-card"><div class="stat-value" id="score">0</div><div class="stat-label">SCORE</div></div>
+      <div class="stat-card score-card"><div class="stat-value" id="score">0</div><div class="stat-label">SCORE</div><div class="stat-average"><span>AVG/FOOD</span><strong id="score-average">0.0</strong></div></div>
       <div class="stat-card"><div class="stat-value" id="best">0</div><div class="stat-label">BEST</div></div>
       <div class="stat-card"><div class="stat-value" id="foods">0</div><div class="stat-label">FOODS</div></div>
       <div class="stat-card accent-card"><div class="stat-value" id="points-now">0</div><div class="stat-label">POINTS NOW</div></div>
@@ -80,6 +80,6 @@
     <div id="install-help" class="install-help" hidden>On Android, open this site in Chrome, tap ⋮ and choose Install app or Add to Home screen.</div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </main>
-  <script type="module" src="./src/app.js?v=11"></script>
+  <script type="module" src="./src/app.js?v=12"></script>
 </body>
 </html>

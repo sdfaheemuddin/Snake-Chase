@@ -1,7 +1,8 @@
 import { loadGameConfig } from './config.js?v=10';
 import { SnakeGame } from './game-engine.js?v=10';
 import { GameRenderer } from './renderer.js?v=11';
-import { buildScreenSnapshot, canvasToPngFile } from './share.js?v=10';
+import { buildScreenSnapshot, canvasToPngFile } from './share.js?v=12';
+import { averagePointsPerFood } from './score-stats.js?v=12';
 
 const $ = id => document.getElementById(id);
 const GAME_CONFIG = await loadGameConfig();
@@ -48,6 +49,7 @@ function showToast(message) {
 
 function syncUI() {
   $('score').textContent = game.score;
+  $('score-average').textContent = averagePointsPerFood(game.score, game.foods);
   $('best').textContent = best;
   $('foods').textContent = game.foods;
   const hearts = Array.from({ length: GAME_CONFIG.lives }, (_, i) => i < game.lives ? '♥' : '♡').join(' ');

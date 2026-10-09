@@ -66,10 +66,23 @@ export function buildScreenSnapshot(root, boardCanvas) {
     const label = stat.querySelector('.stat-label');
     const numberSize = Math.min(36, Math.max(20, parseFloat(getComputedStyle(number).fontSize) || 25));
     const labelSize = Math.min(15, Math.max(11, parseFloat(getComputedStyle(label).fontSize) || 12));
-    drawLabel(ctx, number.textContent, r.x + r.w / 2, r.y + r.h * .36,
+    // Use the actual label positions so the SCORE average matches the visible HUD.
+    const numberRect = rectIn(number, rootRect);
+    const labelRect = rectIn(label, rootRect);
+    drawLabel(ctx, number.textContent, numberRect.x + numberRect.w / 2, numberRect.y + numberRect.h / 2,
       numberSize, accented ? '#c6f9a9' : '#f0f8f0', 850, 'center');
-    drawLabel(ctx, label.textContent, r.x + r.w / 2, r.y + r.h * .78,
+    drawLabel(ctx, label.textContent, labelRect.x + labelRect.w / 2, labelRect.y + labelRect.h / 2,
       labelSize, '#a0bba7', 780, 'center');
+    const average = stat.querySelector('.stat-average');
+    if (average) {
+      for (const item of average.children) {
+        const position = rectIn(item, rootRect);
+        const fontSize = parseFloat(getComputedStyle(item).fontSize) || 11;
+        drawLabel(ctx, item.textContent, position.x + position.w / 2, position.y + position.h / 2,
+          fontSize, item.tagName === 'STRONG' ? '#d9ffaf' : '#bce2bd',
+          item.tagName === 'STRONG' ? 850 : 650, 'center');
+      }
+    }
   }
 
   // Big, readable speed level, lives, progress, and active scoring radius.

@@ -159,3 +159,7 @@ The live points label beside the snake's head is rendered as text only, without 
 - Social services may cache earlier link previews. Allow time or use a preview debugger/re-scrape option if available.
 
 These launch assets add no analytics, trackers, login, or external scripts.
+
+## Average points per food
+
+The SCORE card now displays a compact **AVG/FOOD** value (total score divided by the number of successfully collected foods, rounded to one decimal place). Before collecting food it shows 0.0. Early zero-point taps do not increase the food count. The average is included in the game-over share PNG.

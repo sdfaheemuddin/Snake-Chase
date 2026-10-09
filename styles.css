@@ -63,3 +63,7 @@ body{margin:0;background:radial-gradient(circle at top,#193629 0%,#0d1914 65%,#0
 
 /* Color complements the orange-gold snake and calls out its unpredictable burst. */
 #speed-value.boosted{color:#ffd47a!important;text-shadow:0 0 12px rgba(255,163,59,.75)}
+
+/* Average points per collected food within SCORE; preserve the four-card layout. */
+.stat-average{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;column-gap:3px;row-gap:0;margin-top:4px;color:#bce2bd;font-size:clamp(10px,2.5vw,13px);line-height:1.1;font-weight:650;letter-spacing:-.02em;text-align:center;font-variant-numeric:tabular-nums}
+.stat-average strong{color:#d9ffaf;font-weight:850}
