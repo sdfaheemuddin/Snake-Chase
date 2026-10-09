@@ -7,7 +7,7 @@
   "scoringRadius": 100,
   "speedBursts": {
     "enabled": true,
-    "startAtSpeedLevel": 1,
+    "startAtSpeedLevel": 3,
     "minimumDelaySeconds": 2,
     "maximumDelaySeconds": 5,
     "multiplier": 1.5,
