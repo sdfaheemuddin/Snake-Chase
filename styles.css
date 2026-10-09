@@ -60,3 +60,6 @@ body{margin:0;background:radial-gradient(circle at top,#193629 0%,#0d1914 65%,#0
 .primary{font-size:clamp(17px,4.5vw,21px)}
 @media(max-width:370px){.lives-group{gap:2px}.speed-row{gap:4px}.speed-row>span:last-child{font-size:14px}.lives-display{font-size:13px}}
 @media(max-height:550px){.speed-panel{padding:7px 12px}.speed-row{font-size:clamp(13px,2.5vh,16px)}.speed-row b{font-size:16px}.progress-track{margin:5px 0}.progress-caption{font-size:12px}.button{min-height:46px;font-size:clamp(14px,3vw,18px);padding:6px 10px}}
+
+/* Color complements the orange-gold snake and calls out its unpredictable burst. */
+#speed-value.boosted{color:#ffd47a!important;text-shadow:0 0 12px rgba(255,163,59,.75)}

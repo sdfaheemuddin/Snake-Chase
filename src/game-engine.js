@@ -1,4 +1,4 @@
-import { GAME_CONFIG } from './config.js?v=6';
+import { GAME_CONFIG } from './config.js?v=7';
 
 const copyPoint = point => ({ x: point.x, y: point.y });
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -28,6 +28,7 @@ export class SnakeGame {
     this.missedTaps = 0;
     this.scoringRadius = c.scoringRadius;
     this.burstRemainingSeconds = 0;
+    this.burstDelaySeconds = null;
     this.gameOverReason = null;
     this.currentSpeed = c.initialSpeed;
     this.targetSpeed = c.initialSpeed;
@@ -86,6 +87,10 @@ export class SnakeGame {
 
   get distanceToFood() { return distance(this.head, this.food); }
   get speedBurstActive() { return this.burstRemainingSeconds > 0; }
+  get burstEligible() {
+    return this.config.speedBursts.enabled &&
+      this.speedLevel > this.config.speedBursts.startAfterSpeedLevel;
+  }
   get effectiveSpeed() {
     return this.currentSpeed * (this.speedBurstActive ? this.config.speedBursts.multiplier : 1);
   }
@@ -145,14 +150,10 @@ export class SnakeGame {
         this.config.scoringRadius - reductions * shrink.reductionPer10Foods);
     }
 
-    let burstStarted = false;
-    if (earned > 0 && this.config.speedBursts.enabled) {
-      const burst = this.config.speedBursts;
-      if (this.foods >= burst.startAfterFoods &&
-          (this.foods - burst.startAfterFoods) % burst.everyFoods === 0) {
-        this.burstRemainingSeconds = burst.durationMs / 1000;
-        burstStarted = true;
-      }
+    // Random bursts are clock-driven rather than tied to food milestones.
+    // Reaching level 4 starts a randomly delayed countdown, not an instant boost.
+    if (this.burstEligible && this.burstDelaySeconds === null && !this.speedBurstActive) {
+      this.scheduleNextBurst();
     }
 
     // Keep the body and head in place. Spawn a new target except on final miss.
@@ -166,7 +167,7 @@ export class SnakeGame {
       points: earned,
       foodCollected: earned > 0,
       speedUp,
-      burstStarted,
+      burstStarted: false,
       missed,
       lives: this.lives,
       gameOver: this.status === 'gameover',
@@ -217,6 +218,37 @@ export class SnakeGame {
     this.food = selected;
   }
 
+  /** Schedule a new unpredictable delay; only gameplay-time counts (not pauses). */
+  scheduleNextBurst() {
+    const burst = this.config.speedBursts;
+    const unitRandom = Math.max(0, Math.min(0.999999999, Number(this.random()) || 0));
+    this.burstDelaySeconds = burst.minimumDelaySeconds +
+      unitRandom * (burst.maximumDelaySeconds - burst.minimumDelaySeconds);
+  }
+
+  /** Compute the boosted portion of this frame, including exact timer boundaries. */
+  advanceBurstClock(dt) {
+    if (!this.burstEligible) return { boostedSeconds: 0, started: false };
+
+    if (this.speedBurstActive) {
+      const boostedSeconds = Math.min(dt, this.burstRemainingSeconds);
+      this.burstRemainingSeconds = Math.max(0, this.burstRemainingSeconds - dt);
+      if (this.burstRemainingSeconds === 0) this.scheduleNextBurst();
+      return { boostedSeconds, started: false };
+    }
+
+    if (this.burstDelaySeconds === null) this.scheduleNextBurst();
+    const untilBurst = this.burstDelaySeconds;
+    this.burstDelaySeconds = Math.max(0, untilBurst - dt);
+    if (this.burstDelaySeconds > 0) return { boostedSeconds: 0, started: false };
+
+    this.burstDelaySeconds = null;
+    const boostedSeconds = Math.min(dt - untilBurst, this.config.speedBursts.durationMs / 1000);
+    this.burstRemainingSeconds = Math.max(0, this.config.speedBursts.durationMs / 1000 - boostedSeconds);
+    if (this.burstRemainingSeconds === 0) this.scheduleNextBurst();
+    return { boostedSeconds, started: true };
+  }
+
   /** Advance the same snake (including its entire body trail) by delta seconds. */
   update(deltaSeconds) {
     if (this.status !== 'playing') return { changed: false };
@@ -228,11 +260,11 @@ export class SnakeGame {
     this.currentSpeed += (this.targetSpeed - this.currentSpeed) * Math.min(1, c.accelerationRate * dt);
     this.direction = directionTo(this.head, this.food);
     const distanceRemaining = this.distanceToFood;
-    // Apply the burst for no more than its remaining duration, even across frame boundaries.
-    const burstTime = Math.min(dt, this.burstRemainingSeconds);
+    // Only random elapsed gameplay time may trigger a burst. Its velocity is
+    // 1.5× the current eased speed, not a separate fixed speed.
+    const burst = this.advanceBurstClock(dt);
     const multiplier = c.speedBursts.enabled ? c.speedBursts.multiplier : 1;
-    const move = this.currentSpeed * (dt + burstTime * (multiplier - 1));
-    this.burstRemainingSeconds = Math.max(0, this.burstRemainingSeconds - dt);
+    const move = this.currentSpeed * (dt + burst.boostedSeconds * (multiplier - 1));
 
     // Prevent the snake stepping past a target between animation frames.
     if (distanceRemaining <= c.collisionRadius + move) {
@@ -243,14 +275,14 @@ export class SnakeGame {
       this.trimTrail();
       this.status = 'gameover';
       this.gameOverReason = 'collision';
-      return { changed: true, gameOver: true };
+      return { changed: true, gameOver: true, burstStarted: burst.started };
     }
 
     this.head.x += this.direction.x * move;
     this.head.y += this.direction.y * move;
     this.trail.push(copyPoint(this.head));
     this.trimTrail();
-    return { changed: true, gameOver: false };
+    return { changed: true, gameOver: false, burstStarted: burst.started };
   }
 
   trimTrail() {
@@ -285,6 +317,7 @@ export class SnakeGame {
       burstActive: this.speedBurstActive,
       effectiveSpeed: this.effectiveSpeed,
       burstRemainingSeconds: this.burstRemainingSeconds,
+      burstDelaySeconds: this.burstDelaySeconds,
       speedLevel: this.speedLevel,
       levelProgress: this.levelProgress,
       currentSpeed: this.currentSpeed,

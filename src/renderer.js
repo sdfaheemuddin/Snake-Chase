@@ -55,6 +55,7 @@ export class GameRenderer {
     const { food, head, direction, trail } = game;
     const c = game.config;
     const radius = game.scoringRadius;
+    const boosted = game.speedBurstActive;
 
     ctx.fillStyle = '#10241b';
     ctx.fillRect(0, 0, W, H);
@@ -104,26 +105,32 @@ export class GameRenderer {
     ctx.fill();
     ctx.restore();
 
-    // Draw the *same* body trail across turns and consecutive foods.
+    // Preserve the same snake and trail; a burst changes the whole snake to a
+    // glowing orange-gold palette so the faster movement is unmistakable.
     if (trail.length > 1) {
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.beginPath();
       ctx.moveTo(trail[0].x, trail[0].y);
       for (let i = 1; i < trail.length; i += 1) ctx.lineTo(trail[i].x, trail[i].y);
-      ctx.lineWidth = 20;
-      ctx.strokeStyle = '#307d58';
+      ctx.lineWidth = boosted ? 23 : 20;
+      ctx.strokeStyle = boosted ? '#b65320' : '#307d58';
+      if (boosted) {
+        ctx.shadowColor = 'rgba(255,166,65,.65)';
+        ctx.shadowBlur = 18;
+      }
       ctx.stroke();
+      ctx.shadowBlur = 0;
       ctx.lineWidth = 13;
-      ctx.strokeStyle = '#77d996';
+      ctx.strokeStyle = boosted ? '#ffac53' : '#77d996';
       ctx.stroke();
     }
 
     const perpendicular = { x: -direction.y, y: direction.x };
     ctx.save();
-    ctx.shadowColor = 'rgba(154,255,161,.5)';
-    ctx.shadowBlur = 11;
-    this.circle(head.x, head.y, 13, '#b6f89e');
+    ctx.shadowColor = boosted ? 'rgba(255,191,79,.9)' : 'rgba(154,255,161,.5)';
+    ctx.shadowBlur = boosted ? 24 : 11;
+    this.circle(head.x, head.y, 13, boosted ? '#ffe078' : '#b6f89e');
     ctx.restore();
     for (const side of [-1, 1]) {
       const ex = head.x + direction.x * 5 + perpendicular.x * side * 6;

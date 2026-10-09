@@ -16,9 +16,10 @@ export const GAME_CONFIG = Object.freeze({
   lives: 3,
   speedBursts: Object.freeze({
     enabled: true,
-    startAfterFoods: 20,
-    everyFoods: 5,
-    multiplier: 1.2,
+    startAfterSpeedLevel: 3,
+    minimumDelaySeconds: 2,
+    maximumDelaySeconds: 5,
+    multiplier: 1.5,
     durationMs: 600,
   }),
   shrinkingRadius: Object.freeze({
@@ -55,6 +56,10 @@ export function resolveGameConfig(input = {}) {
   const scoringRadius = numberInRange(input.scoringRadius, b.scoringRadius, 55, 160);
   const minimumRadius = Math.min(scoringRadius,
     numberInRange(shrink.minimumRadius, b.shrinkingRadius.minimumRadius, b.collisionRadius + 10, 160));
+  const minimumBurstDelay = numberInRange(burst.minimumDelaySeconds,
+    b.speedBursts.minimumDelaySeconds, 0.25, 30);
+  const maximumBurstDelay = Math.max(minimumBurstDelay,
+    numberInRange(burst.maximumDelaySeconds, b.speedBursts.maximumDelaySeconds, 0.25, 60));
   return Object.freeze({
     ...b,
     initialSpeed,
@@ -65,8 +70,10 @@ export function resolveGameConfig(input = {}) {
     lives: numberInRange(input.lives, b.lives, 1, 9, true),
     speedBursts: Object.freeze({
       enabled: booleanOr(burst.enabled, b.speedBursts.enabled),
-      startAfterFoods: numberInRange(burst.startAfterFoods, b.speedBursts.startAfterFoods, 1, 500, true),
-      everyFoods: numberInRange(burst.everyFoods, b.speedBursts.everyFoods, 1, 100, true),
+      startAfterSpeedLevel: numberInRange(burst.startAfterSpeedLevel,
+        b.speedBursts.startAfterSpeedLevel, 1, 30, true),
+      minimumDelaySeconds: minimumBurstDelay,
+      maximumDelaySeconds: maximumBurstDelay,
       multiplier: numberInRange(burst.multiplier, b.speedBursts.multiplier, 1, 3),
       durationMs: numberInRange(burst.durationMs, b.speedBursts.durationMs, 100, 5000, true),
     }),

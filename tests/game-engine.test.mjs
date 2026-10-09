@@ -19,6 +19,10 @@ test('JSON configuration enables both challenges with 130 initial speed', () => 
   assert.equal(loaded.lives, 3);
   assert.equal(loaded.scoringRadius, 100);
   assert.equal(loaded.speedBursts.enabled, true);
+  assert.equal(loaded.speedBursts.startAfterSpeedLevel, 3);
+  assert.equal(loaded.speedBursts.multiplier, 1.5);
+  assert.equal(loaded.speedBursts.minimumDelaySeconds, 2);
+  assert.equal(loaded.speedBursts.maximumDelaySeconds, 5);
   assert.equal(loaded.shrinkingRadius.enabled, true);
   assert.equal(loaded.shrinkingRadius.startAfterSpeedLevel, 3);
   assert.equal(Object.isFrozen(loaded.speedBursts), true);
@@ -128,33 +132,77 @@ test('speed cap remains 220 even after 200 foods', () => {
   assert.equal(game.targetSpeed, 220);
 });
 
-test('enabled burst starts at 20 and every 5 foods, lasts 600ms, and pauses correctly', () => {
-  const game = new SnakeGame(); game.start();
-  for (let i = 1; i <= 26; i++) {
-    const result = accurateTap(game);
-    assert.equal(result.burstStarted, i === 20 || i === 25);
+test('no random burst until level 4, even after waiting at level 3', () => {
+  const game = new SnakeGame({ random: () => 0 }); game.start();
+  for (let i = 0; i < 29; i++) accurateTap(game);
+  assert.equal(game.speedLevel, 3);
+  for (let i = 0; i < 120; i++) {
+    game.food = { x: game.head.x + 10000, y: game.head.y };
+    game.update(.05);
+    assert.equal(game.speedBurstActive, false);
   }
-  assert.ok(game.speedBurstActive);
-  assert.equal(game.burstRemainingSeconds, .6);
-  game.pause(); game.update(.04);
-  assert.equal(game.burstRemainingSeconds, .6);
-  game.resume();
-  game.food = { x: game.head.x + 1000, y: game.head.y };
-  game.update(.05);
-  assert.ok(game.burstRemainingSeconds < .6);
-  for (let i = 0; i < 16; i++) game.update(.05);
-  assert.equal(game.burstRemainingSeconds, 0);
-  assert.equal(game.speedBurstActive, false);
+  assert.equal(game.burstDelaySeconds, null);
 });
 
-test('burst uses a higher movement multiplier without resetting base speed', () => {
+test('burst occurs at random gameplay-time intervals after level 3, and pauses freeze countdowns', () => {
+  const game = new SnakeGame({ random: () => 0 }); game.start();
+  for (let i = 0; i < 30; i++) accurateTap(game);
+  assert.equal(game.speedLevel, 4);
+  assert.equal(game.burstDelaySeconds, 2);
+  assert.equal(game.speedBurstActive, false);
+  game.pause();
+  game.update(.05);
+  assert.equal(game.burstDelaySeconds, 2);
+  game.resume();
+  let startEvents = 0;
+  for (let i = 0; i < 41; i++) {
+    game.food = { x: game.head.x + 10000, y: game.head.y };
+    const result = game.update(.05);
+    if (result.burstStarted) startEvents++;
+  }
+  assert.equal(startEvents, 1);
+  assert.ok(game.speedBurstActive);
+  assert.ok(close(game.effectiveSpeed, game.currentSpeed * 1.5));
+  const remaining = game.burstRemainingSeconds;
+  game.pause();
+  game.update(.05);
+  assert.equal(game.burstRemainingSeconds, remaining);
+  game.resume();
+  for (let i = 0; i < 13; i++) {
+    game.food = { x: game.head.x + 10000, y: game.head.y };
+    game.update(.05);
+  }
+  assert.equal(game.speedBurstActive, false);
+  assert.ok(game.burstDelaySeconds > 0);
+  for (let i = 0; i < 41; i++) {
+    game.food = { x: game.head.x + 10000, y: game.head.y };
+    const result = game.update(.05);
+    if (result.burstStarted) startEvents++;
+  }
+  assert.equal(startEvents, 2);
+});
+
+test('random delay range varies between minimum and maximum, independent of food counts', () => {
+  const shortest = new SnakeGame({ random: () => 0 }); shortest.start();
+  const longest = new SnakeGame({ random: () => 0.999999 }); longest.start();
+  for (let i = 0; i < 30; i++) { accurateTap(shortest); accurateTap(longest); }
+  assert.equal(shortest.burstDelaySeconds, 2);
+  assert.ok(longest.burstDelaySeconds > 4.99);
+  assert.ok(longest.burstDelaySeconds <= 5);
+  assert.equal(shortest.getState().burstDelaySeconds, 2);
+  assert.equal(resolveGameConfig({speedBursts:{minimumDelaySeconds:8, maximumDelaySeconds:2}})
+    .speedBursts.maximumDelaySeconds, 8);
+});
+
+test('active burst applies 1.5x movement without resetting base speed', () => {
   const game = new SnakeGame(); game.start();
+  for (let i = 0; i < 30; i++) accurateTap(game);
   game.food = { x: game.head.x + 500, y: game.head.y };
   game.burstRemainingSeconds = .6;
   const x = game.head.x;
   game.update(.02);
-  assert.ok(game.head.x - x > game.currentSpeed * .02);
-  assert.equal(game.targetSpeed, 130);
+  assert.ok(close(game.head.x - x, game.currentSpeed * .02 * 1.5));
+  assert.equal(game.targetSpeed, 166);
 });
 
 test('radius stays at 100 through level 3; starts shrinking at level 4 and stops at 75', () => {

@@ -1,7 +1,7 @@
-import { loadGameConfig } from './config.js?v=6';
-import { SnakeGame } from './game-engine.js?v=6';
-import { GameRenderer } from './renderer.js?v=6';
-import { buildScreenSnapshot, canvasToPngFile } from './share.js?v=6';
+import { loadGameConfig } from './config.js?v=7';
+import { SnakeGame } from './game-engine.js?v=7';
+import { GameRenderer } from './renderer.js?v=7';
+import { buildScreenSnapshot, canvasToPngFile } from './share.js?v=7';
 
 const $ = id => document.getElementById(id);
 const GAME_CONFIG = await loadGameConfig();
@@ -57,7 +57,8 @@ function syncUI() {
   $('radius-value').textContent = String(game.scoringRadius);
   $('points-now').textContent = game.status === 'playing' || game.status === 'paused' ? game.availablePoints : 0;
   $('level').textContent = game.speedLevel;
-  $('speed-value').textContent = `${Math.round(game.effectiveSpeed)} px/s${game.speedBurstActive ? ' ⚡' : ''}`;
+  $('speed-value').textContent = `${Math.round(game.effectiveSpeed)} px/s${game.speedBurstActive ? ' ⚡ 1.5×' : ''}`;
+  $('speed-value').classList.toggle('boosted', game.speedBurstActive);
   $('progress-fill').style.width = `${(game.levelProgress / GAME_CONFIG.foodsPerSpeedLevel) * 100}%`;
   $('progress-text').textContent = `${game.levelProgress} / ${GAME_CONFIG.foodsPerSpeedLevel} foods`;
   $('distance').textContent = `${Math.round(game.distanceToFood)} px away`;
