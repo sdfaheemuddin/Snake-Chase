@@ -24,6 +24,7 @@ test('JSON configuration enables both challenges with 150 initial speed', () => 
   assert.equal(loaded.speedBursts.minimumDelaySeconds, 2);
   assert.equal(loaded.speedBursts.maximumDelaySeconds, 5);
   assert.equal(loaded.shrinkingRadius.enabled, true);
+  assert.equal(loaded.shrinkingRadius.reductionPerSpeedLevel, 5);
   assert.equal(loaded.shrinkingRadius.startAfterSpeedLevel, 3);
   assert.equal(Object.isFrozen(loaded.speedBursts), true);
 });
@@ -285,6 +286,25 @@ test('rapid consecutive misses without time delay consume all three lives', () =
   assert.equal(results[2].gameOver, true);
   assert.equal(game.status, 'gameover');
   assert.equal(game.missedTaps, 3);
+});
+
+test('radius reduction is configurable per speed level (not every ten foods)', () => {
+  const config = resolveGameConfig({
+    foodsPerSpeedLevel: 5,
+    shrinkingRadius: { enabled: true, startAfterSpeedLevel: 3, reductionPerSpeedLevel: 7, minimumRadius: 75 },
+  });
+  assert.equal(config.shrinkingRadius.reductionPerSpeedLevel, 7);
+  assert.equal('reductionPer10Foods' in config.shrinkingRadius, false);
+  const game = new SnakeGame({ config });
+  game.start();
+  for (let i = 1; i <= 20; i++) {
+    accurateTap(game);
+    const expected = Math.max(75, 100 - Math.max(0, Math.floor(i / 5) - 2) * 7);
+    assert.equal(game.scoringRadius, expected, 'at food ' + i);
+  }
+  assert.equal(game.scoringRadius, 86);
+  assert.equal(resolveGameConfig({ shrinkingRadius: { reductionPerSpeedLevel: 20 } })
+    .shrinkingRadius.reductionPerSpeedLevel, 5);
 });
 
 test('radius cutoff is configurable through public game JSON', () => {

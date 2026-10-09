@@ -1,7 +1,7 @@
-import { loadGameConfig } from './config.js?v=9';
-import { SnakeGame } from './game-engine.js?v=9';
-import { GameRenderer } from './renderer.js?v=9';
-import { buildScreenSnapshot, canvasToPngFile } from './share.js?v=9';
+import { loadGameConfig } from './config.js?v=10';
+import { SnakeGame } from './game-engine.js?v=10';
+import { GameRenderer } from './renderer.js?v=10';
+import { buildScreenSnapshot, canvasToPngFile } from './share.js?v=10';
 
 const $ = id => document.getElementById(id);
 const GAME_CONFIG = await loadGameConfig();

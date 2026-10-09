@@ -1,4 +1,4 @@
-import { GAME_CONFIG } from './config.js?v=9';
+import { GAME_CONFIG } from './config.js?v=10';
 
 const copyPoint = point => ({ x: point.x, y: point.y });
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -147,11 +147,11 @@ export class SnakeGame {
       const shrink = this.config.shrinkingRadius;
       const reductions = Math.max(0, this.speedLevel - shrink.startAfterSpeedLevel);
       this.scoringRadius = Math.max(shrink.minimumRadius,
-        this.config.scoringRadius - reductions * shrink.reductionPer10Foods);
+        this.config.scoringRadius - reductions * shrink.reductionPerSpeedLevel);
     }
 
     // Random bursts are clock-driven rather than tied to food milestones.
-    // Reaching level 4 starts a randomly delayed countdown, not an instant boost.
+    // Eligible levels begin a random countdown rather than an instant boost.
     if (this.burstEligible && this.burstDelaySeconds === null && !this.speedBurstActive) {
       this.scheduleNextBurst();
     }

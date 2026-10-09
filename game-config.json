@@ -15,7 +15,7 @@
   },
   "shrinkingRadius": {
     "enabled": true,
-    "reductionPer10Foods": 5,
+    "reductionPerSpeedLevel": 5,
     "minimumRadius": 75,
     "startAfterSpeedLevel": 3
   },

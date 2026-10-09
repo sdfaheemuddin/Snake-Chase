@@ -115,7 +115,7 @@ Edit [`game-config.json`](./game-config.json) directly in GitHub to update every
   "lives": 3,
   "scoringRadius": 100,
   "speedBursts": { "enabled": true, "startAtSpeedLevel": 1, "minimumDelaySeconds": 2, "maximumDelaySeconds": 5, "multiplier": 1.5, "durationMs": 600 },
-  "shrinkingRadius": { "enabled": true, "startAfterSpeedLevel": 3, "reductionPer10Foods": 5, "minimumRadius": 75 }
+  "shrinkingRadius": { "enabled": true, "startAfterSpeedLevel": 3, "reductionPerSpeedLevel": 5, "minimumRadius": 75 }
 }
 ```
 

@@ -30,7 +30,7 @@ export const GAME_CONFIG = Object.freeze({
   }),
   shrinkingRadius: Object.freeze({
     enabled: true,
-    reductionPer10Foods: 5,
+    reductionPerSpeedLevel: 5,
     startAfterSpeedLevel: 3,
     minimumRadius: 75,
   }),
@@ -97,8 +97,8 @@ export function resolveGameConfig(input = {}) {
     }),
     shrinkingRadius: Object.freeze({
       enabled: booleanOr(shrink.enabled, b.shrinkingRadius.enabled),
-      reductionPer10Foods: numberInRange(shrink.reductionPer10Foods,
-        b.shrinkingRadius.reductionPer10Foods, 0, 15),
+      reductionPerSpeedLevel: numberInRange(shrink.reductionPerSpeedLevel,
+        b.shrinkingRadius.reductionPerSpeedLevel, 0, 15),
       startAfterSpeedLevel: numberInRange(shrink.startAfterSpeedLevel,
         b.shrinkingRadius.startAfterSpeedLevel, 1, 30, true),
       minimumRadius,
