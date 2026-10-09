@@ -1,4 +1,4 @@
-import { GAME_CONFIG } from './config.js?v=8';
+import { GAME_CONFIG } from './config.js?v=9';
 
 const copyPoint = point => ({ x: point.x, y: point.y });
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -89,7 +89,7 @@ export class SnakeGame {
   get speedBurstActive() { return this.burstRemainingSeconds > 0; }
   get burstEligible() {
     return this.config.speedBursts.enabled &&
-      this.speedLevel > this.config.speedBursts.startAfterSpeedLevel;
+      this.speedLevel >= this.config.speedBursts.startAtSpeedLevel;
   }
   get effectiveSpeed() {
     return this.currentSpeed * (this.speedBurstActive ? this.config.speedBursts.multiplier : 1);

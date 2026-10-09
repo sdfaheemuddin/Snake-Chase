@@ -1,7 +1,7 @@
-import { loadGameConfig } from './config.js?v=8';
-import { SnakeGame } from './game-engine.js?v=8';
-import { GameRenderer } from './renderer.js?v=8';
-import { buildScreenSnapshot, canvasToPngFile } from './share.js?v=8';
+import { loadGameConfig } from './config.js?v=9';
+import { SnakeGame } from './game-engine.js?v=9';
+import { GameRenderer } from './renderer.js?v=9';
+import { buildScreenSnapshot, canvasToPngFile } from './share.js?v=9';
 
 const $ = id => document.getElementById(id);
 const GAME_CONFIG = await loadGameConfig();
@@ -61,7 +61,6 @@ function syncUI() {
   $('speed-value').classList.toggle('boosted', game.speedBurstActive);
   $('progress-fill').style.width = `${(game.levelProgress / GAME_CONFIG.foodsPerSpeedLevel) * 100}%`;
   $('progress-text').textContent = `${game.levelProgress} / ${GAME_CONFIG.foodsPerSpeedLevel} foods`;
-  $('distance').textContent = `${Math.round(game.distanceToFood)} px away`;
 
   const status = game.status === 'playing'
     ? game.availablePoints >= 75 ? 'Perfect zone — TAP NOW!'

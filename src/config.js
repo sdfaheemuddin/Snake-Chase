@@ -5,7 +5,7 @@ export const GAME_CONFIG = Object.freeze({
   scoringRadius: 100,
   collisionRadius: 23,
   maximumPointsPerTap: 100,
-  initialSpeed: 130,
+  initialSpeed: 150,
   speedIncreasePerLevel: 12,
   foodsPerSpeedLevel: 10,
   maximumSpeed: 220, // Base speed limit; short bursts may temporarily exceed it.
@@ -22,7 +22,7 @@ export const GAME_CONFIG = Object.freeze({
   }),
   speedBursts: Object.freeze({
     enabled: true,
-    startAfterSpeedLevel: 3,
+    startAtSpeedLevel: 1, // Inclusive: bursts can start in level 1.
     minimumDelaySeconds: 2,
     maximumDelaySeconds: 5,
     multiplier: 1.5,
@@ -68,6 +68,10 @@ export function resolveGameConfig(input = {}) {
     b.speedBursts.minimumDelaySeconds, 0.25, 30);
   const maximumBurstDelay = Math.max(minimumBurstDelay,
     numberInRange(burst.maximumDelaySeconds, b.speedBursts.maximumDelaySeconds, 0.25, 60));
+  // Compatibility: old startAfterSpeedLevel: 3 meant the first eligible level was 4.
+  const requestedBurstStart = burst.startAtSpeedLevel !== undefined
+    ? burst.startAtSpeedLevel
+    : typeof burst.startAfterSpeedLevel === 'number' ? burst.startAfterSpeedLevel + 1 : undefined;
   return Object.freeze({
     ...b,
     initialSpeed,
@@ -84,8 +88,8 @@ export function resolveGameConfig(input = {}) {
     }),
     speedBursts: Object.freeze({
       enabled: booleanOr(burst.enabled, b.speedBursts.enabled),
-      startAfterSpeedLevel: numberInRange(burst.startAfterSpeedLevel,
-        b.speedBursts.startAfterSpeedLevel, 1, 30, true),
+      startAtSpeedLevel: numberInRange(requestedBurstStart,
+        b.speedBursts.startAtSpeedLevel, 1, 30, true),
       minimumDelaySeconds: minimumBurstDelay,
       maximumDelaySeconds: maximumBurstDelay,
       multiplier: numberInRange(burst.multiplier, b.speedBursts.multiplier, 1, 3),

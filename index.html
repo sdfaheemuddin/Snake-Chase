@@ -15,7 +15,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
   <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="./styles.css?v=8">
+  <link rel="stylesheet" href="./styles.css?v=9">
   <title>Snake Chase — Timing Challenge</title>
 </head>
 <body>
@@ -36,7 +36,7 @@
     </section>
 
     <section class="speed-panel" aria-label="Speed progression">
-      <div class="speed-row"><span>↗ Speed level <b id="level">1</b></span><span class="lives-group"><span class="lives-display" id="lives" aria-label="3 lives remaining">♥ ♥ ♥</span><span id="lives-count" class="lives-count">3/3</span></span><span id="speed-value">130 px/s</span></div>
+      <div class="speed-row"><span>↗ Speed level <b id="level">1</b></span><span class="lives-group"><span class="lives-display" id="lives" aria-label="3 lives remaining">♥ ♥ ♥</span><span id="lives-count" class="lives-count">3/3</span></span><span id="speed-value">150 px/s</span></div>
       <div class="progress-track" aria-label="Foods until next speed level"><div class="progress-fill" id="progress-fill"></div></div>
       <div class="progress-caption"><span id="progress-text">0 / 10 foods</span><span>Radius <b id="radius-value">100</b> px</span></div>
     </section>
@@ -55,7 +55,7 @@
           </div>
         </div>
       </div>
-      <div class="live-row"><span id="game-status" aria-live="polite">Ready to play</span><strong id="distance">—</strong></div>
+      <div class="live-row"><span id="game-status" aria-live="polite">Ready to play</span></div>
     </section>
 
     <div class="action-row">
@@ -65,6 +65,6 @@
     <div id="install-help" class="install-help" hidden>On Android, open this site in Chrome, tap ⋮ and choose Install app or Add to Home screen.</div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </main>
-  <script type="module" src="./src/app.js?v=8"></script>
+  <script type="module" src="./src/app.js?v=9"></script>
 </body>
 </html>

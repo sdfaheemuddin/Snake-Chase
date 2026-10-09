@@ -101,14 +101,12 @@ export function buildScreenSnapshot(root, boardCanvas) {
   ctx.strokeStyle = '#476e52';
   ctx.strokeRect(board.x, board.y, board.w, board.h);
 
-  // Keep the status (and food distance) exactly as displayed.
+  // Keep the status only; distance is intentionally hidden from the HUD and PNG.
   const status = rectIn(root.querySelector('.live-row'), rootRect);
   const statusSize = Math.min(14, Math.max(11,
     parseFloat(getComputedStyle(root.querySelector('.live-row')).fontSize) || 12));
   drawLabel(ctx, root.querySelector('#game-status').textContent,
     status.x + 3, status.y + status.h / 2, statusSize, '#bad0bc', 500);
-  drawLabel(ctx, root.querySelector('#distance').textContent,
-    status.x + status.w - 3, status.y + status.h / 2, statusSize, '#d1f7b9', 750, 'right');
 
   // Game-over is only the small badge, with the food and snake unobscured.
   const overlay = root.querySelector('#game-overlay');

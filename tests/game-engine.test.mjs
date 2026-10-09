@@ -12,14 +12,14 @@ const accurateTap = game => {
 
 const getJson = () => JSON.parse(readFileSync(new URL('../game-config.json', import.meta.url), 'utf8'));
 
-test('JSON configuration enables both challenges with 130 initial speed', () => {
+test('JSON configuration enables both challenges with 150 initial speed', () => {
   const loaded = resolveGameConfig(getJson());
-  assert.equal(loaded.initialSpeed, 130);
+  assert.equal(loaded.initialSpeed, 150);
   assert.equal(loaded.maximumSpeed, 220);
   assert.equal(loaded.lives, 3);
   assert.equal(loaded.scoringRadius, 100);
   assert.equal(loaded.speedBursts.enabled, true);
-  assert.equal(loaded.speedBursts.startAfterSpeedLevel, 3);
+  assert.equal(loaded.speedBursts.startAtSpeedLevel, 1);
   assert.equal(loaded.speedBursts.multiplier, 1.5);
   assert.equal(loaded.speedBursts.minimumDelaySeconds, 2);
   assert.equal(loaded.speedBursts.maximumDelaySeconds, 5);
@@ -40,13 +40,13 @@ test('remote JSON loads correctly; bad data falls back to safe defaults', async 
   } finally { console.warn = originalWarn; }
 });
 
-test('new game starts with 3 lives, speed 130, and full radius', () => {
+test('new game starts with 3 lives, speed 150, and full radius', () => {
   const game = new SnakeGame();
   game.start();
   assert.equal(game.status, 'playing');
   assert.equal(game.lives, 3);
-  assert.equal(game.currentSpeed, 130);
-  assert.equal(game.targetSpeed, 130);
+  assert.equal(game.currentSpeed, 150);
+  assert.equal(game.targetSpeed, 150);
   assert.equal(game.scoringRadius, 100);
   assert.ok(game.trail.length > 2);
 });
@@ -117,12 +117,12 @@ test('base speed changes only every tenth scored food, and eases gradually', () 
     const result = accurateTap(game);
     assert.equal(result.foodCollected, true);
     assert.equal(result.speedUp, i % 10 === 0);
-    assert.equal(game.targetSpeed, 130 + Math.floor(i / 10) * 12);
+    assert.equal(game.targetSpeed, 150 + Math.floor(i / 10) * 12);
   }
-  assert.equal(game.targetSpeed, 166);
-  assert.equal(game.currentSpeed, 130);
+  assert.equal(game.targetSpeed, 186);
+  assert.equal(game.currentSpeed, 150);
   game.update(.016);
-  assert.ok(game.currentSpeed > 130 && game.currentSpeed < 166);
+  assert.ok(game.currentSpeed > 150 && game.currentSpeed < 186);
 });
 
 test('speed cap remains 220 even after 200 foods', () => {
@@ -132,8 +132,9 @@ test('speed cap remains 220 even after 200 foods', () => {
   assert.equal(game.targetSpeed, 220);
 });
 
-test('no random burst until level 4, even after waiting at level 3', () => {
-  const game = new SnakeGame({ random: () => 0 }); game.start();
+test('level-4 burst setting keeps levels 1–3 free of bursts', () => {
+  const config = resolveGameConfig({ speedBursts: { startAtSpeedLevel: 4 } });
+  const game = new SnakeGame({ config, random: () => 0 }); game.start();
   for (let i = 0; i < 29; i++) accurateTap(game);
   assert.equal(game.speedLevel, 3);
   for (let i = 0; i < 120; i++) {
@@ -144,8 +145,9 @@ test('no random burst until level 4, even after waiting at level 3', () => {
   assert.equal(game.burstDelaySeconds, null);
 });
 
-test('burst occurs at random gameplay-time intervals after level 3, and pauses freeze countdowns', () => {
-  const game = new SnakeGame({ random: () => 0 }); game.start();
+test('a level-4 burst setting schedules bursts and freezes when paused', () => {
+  const config = resolveGameConfig({ speedBursts: { startAtSpeedLevel: 4 } });
+  const game = new SnakeGame({ config, random: () => 0 }); game.start();
   for (let i = 0; i < 30; i++) accurateTap(game);
   assert.equal(game.speedLevel, 4);
   assert.equal(game.burstDelaySeconds, 2);
@@ -182,6 +184,31 @@ test('burst occurs at random gameplay-time intervals after level 3, and pauses f
   assert.equal(startEvents, 2);
 });
 
+test('configured bursts start from level 1 before collecting foods', () => {
+  const game = new SnakeGame({ random: () => 0 });
+  game.start();
+  assert.equal(game.speedLevel, 1);
+  assert.equal(game.burstEligible, true);
+  game.food = { x: game.head.x + 10000, y: game.head.y };
+  let starts = 0;
+  for (let i = 0; i < 41; i++) {
+    if (game.update(0.05).burstStarted) starts++;
+  }
+  assert.equal(starts, 1);
+  assert.ok(game.speedBurstActive);
+  assert.equal(game.effectiveSpeed, game.currentSpeed * 1.5);
+});
+
+test('legacy startAfterSpeedLevel remains backward compatible', () => {
+  const config = resolveGameConfig({ speedBursts: { startAfterSpeedLevel: 3 } });
+  assert.equal(config.speedBursts.startAtSpeedLevel, 4);
+  const game = new SnakeGame({ config });
+  game.start();
+  assert.equal(game.burstEligible, false);
+  for (let i = 0; i < 30; i++) accurateTap(game);
+  assert.equal(game.burstEligible, true);
+});
+
 test('random delay range varies between minimum and maximum, independent of food counts', () => {
   const shortest = new SnakeGame({ random: () => 0 }); shortest.start();
   const longest = new SnakeGame({ random: () => 0.999999 }); longest.start();
@@ -202,7 +229,7 @@ test('active burst applies 1.5x movement without resetting base speed', () => {
   const x = game.head.x;
   game.update(.02);
   assert.ok(close(game.head.x - x, game.currentSpeed * .02 * 1.5));
-  assert.equal(game.targetSpeed, 166);
+  assert.equal(game.targetSpeed, 186);
 });
 
 test('radius stays at 100 through level 3; starts shrinking at level 4 and stops at 75', () => {
@@ -283,7 +310,8 @@ test('head-score settings are public, individually configurable, and validated',
 });
 
 test('foodsPerSpeedLevel is configurable and drives speed, burst and radius milestones', () => {
-  const config = resolveGameConfig({...getJson(), foodsPerSpeedLevel: 5});
+  const config = resolveGameConfig({...getJson(), foodsPerSpeedLevel: 5,
+    speedBursts: {...getJson().speedBursts, startAtSpeedLevel: 4}});
   const game = new SnakeGame({config, random: () => .5});
   game.start();
   for (let i=1; i<=20; i++) {
@@ -295,7 +323,7 @@ test('foodsPerSpeedLevel is configurable and drives speed, burst and radius mile
       assert.equal(game.burstDelaySeconds, null);
     }
   }
-  assert.equal(game.targetSpeed, 178);
+  assert.equal(game.targetSpeed, 198);
   assert.equal(game.scoringRadius, 90);
   assert.ok(game.burstDelaySeconds >= 2 && game.burstDelaySeconds <= 5);
   assert.equal(resolveGameConfig({foodsPerSpeedLevel: 500}).foodsPerSpeedLevel, 10);

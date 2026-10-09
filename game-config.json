@@ -1,5 +1,5 @@
 {
-  "initialSpeed": 130,
+  "initialSpeed": 150,
   "maximumSpeed": 220,
   "speedIncreasePerLevel": 12,
   "foodsPerSpeedLevel": 10,
@@ -7,7 +7,7 @@
   "scoringRadius": 100,
   "speedBursts": {
     "enabled": true,
-    "startAfterSpeedLevel": 3,
+    "startAtSpeedLevel": 1,
     "minimumDelaySeconds": 2,
     "maximumDelaySeconds": 5,
     "multiplier": 1.5,

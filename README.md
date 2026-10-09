@@ -9,7 +9,7 @@ A shareable, offline-capable snake timing game. No npm install or backend needed
 - A successful tap or an early tap with lives remaining places a **new food target on the same board**, and the existing snake turns toward it; the snake's current position and body trail are preserved.
 - Outside the scoring radius: **0 points and one life lost**. Inside: up to **100 points**. The radius starts at **100 logical units**, stays fixed through speed level 3, and shrinks by 5 at the start of each subsequent level (30, 40, 50... foods), down to 75; it scales uniformly with the screen.
 - Only positive-point taps count as **collected foods**. Each early tap loses one of 3 lives and still redirects the snake, except the third miss ends the game.
-- After **10, 20, 30, ...** collected foods, base target speed rises by **12 logical units/s**, from **130** to a maximum base speed of **220**. Speed eases gradually toward each target. Starting at **speed level 4** (30 foods), unpredictable **1.5× speed bursts** occur after random intervals of **2–5 seconds of active gameplay**. Each burst lasts **600 ms** and turns the snake **orange-gold with a bright glow**. The burst speed is 1.5× the *current* speed and can temporarily exceed the base cap. Time spent paused does not count toward a burst.
+- After **10, 20, 30, ...** collected foods, base target speed rises by **12 logical units/s**, from **150** to a maximum base speed of **220**. Speed eases gradually toward each target. Starting at **speed level 1** (immediately), unpredictable **1.5× speed bursts** occur after random intervals of **2–5 seconds of active gameplay**. Each burst lasts **600 ms** and turns the snake **orange-gold with a bright glow**. The burst speed is 1.5× the *current* speed and can temporarily exceed the base cap. Time spent paused does not count toward a burst.
 - The game ends if the snake reaches the food or all three lives are lost.
 - **Live tap value** (`+0` to `+100`) follows the snake head. The score popup animates from the head's position at tap time, with the same rising effect. Configure these independently using `headScore` in `game-config.json`.
 - **Foods per speed level** is `foodsPerSpeedLevel` in `game-config.json` (default 10). Changing it also changes how soon speed levels, bursts, and shrinking radius milestones are reached.
@@ -108,13 +108,13 @@ Edit [`game-config.json`](./game-config.json) directly in GitHub to update every
 
 ```json
 {
-  "initialSpeed": 130,
+  "initialSpeed": 150,
   "maximumSpeed": 220,
   "speedIncreasePerLevel": 12,
   "foodsPerSpeedLevel": 10,
   "lives": 3,
   "scoringRadius": 100,
-  "speedBursts": { "enabled": true, "startAfterSpeedLevel": 3, "minimumDelaySeconds": 2, "maximumDelaySeconds": 5, "multiplier": 1.5, "durationMs": 600 },
+  "speedBursts": { "enabled": true, "startAtSpeedLevel": 1, "minimumDelaySeconds": 2, "maximumDelaySeconds": 5, "multiplier": 1.5, "durationMs": 600 },
   "shrinkingRadius": { "enabled": true, "startAfterSpeedLevel": 3, "reductionPer10Foods": 5, "minimumRadius": 75 }
 }
 ```
@@ -137,6 +137,8 @@ python tools/generate_icons.py
 **Important:** For GitHub Pages to be publicly accessible on a free GitHub account,
 make the repository **Public** in Settings → General → Danger Zone (if appropriate).
 Pages access for a private repository depends on your GitHub plan and settings.
+
+The bottom-right food-distance label is hidden in both gameplay and shared PNGs; distance still drives scoring and collisions.
 
 ## Speed and score release notes
 
