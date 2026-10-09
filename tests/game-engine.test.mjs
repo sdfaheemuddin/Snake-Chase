@@ -19,7 +19,7 @@ test('JSON configuration enables both challenges with 150 initial speed', () => 
   assert.equal(loaded.lives, 3);
   assert.equal(loaded.scoringRadius, 100);
   assert.equal(loaded.speedBursts.enabled, true);
-  assert.equal(loaded.speedBursts.startAtSpeedLevel, 1);
+  assert.equal(loaded.speedBursts.startAtSpeedLevel, 3);
   assert.equal(loaded.speedBursts.multiplier, 1.5);
   assert.equal(loaded.speedBursts.minimumDelaySeconds, 2);
   assert.equal(loaded.speedBursts.maximumDelaySeconds, 5);
