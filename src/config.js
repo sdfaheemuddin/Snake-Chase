@@ -17,7 +17,7 @@ export const GAME_CONFIG = Object.freeze({
   headScore: Object.freeze({
     enabled: true,             // Show live points possible beside the moving head.
     tapAnimationAtHead: true,  // Start the existing scoring animation at the tap-time head.
-    showZero: true,            // Show +0 before the snake enters the scoring circle.
+    showZero: false,            // Show +0 before the snake enters the scoring circle.
     offset: 38,                // Logical screen units above the snake's head.
   }),
   speedBursts: Object.freeze({
