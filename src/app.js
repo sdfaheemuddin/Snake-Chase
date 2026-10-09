@@ -1,10 +1,11 @@
-import { GAME_CONFIG } from './config.js';
+import { loadGameConfig } from './config.js';
 import { SnakeGame } from './game-engine.js';
 import { GameRenderer } from './renderer.js';
 import { buildScreenSnapshot, canvasToPngFile } from './share.js';
 
 const $ = id => document.getElementById(id);
-const game = new SnakeGame();
+const GAME_CONFIG = await loadGameConfig();
+const game = new SnakeGame({ config: GAME_CONFIG });
 const renderer = new GameRenderer($('game-canvas'), GAME_CONFIG.boardSize, (width, height) => game.setBoardDimensions(width, height));
 const overlay = $('game-overlay');
 const popup = $('points-popup');
@@ -14,6 +15,9 @@ let animationId = null;
 let deferredInstallPrompt = null;
 let toastTimeout = null;
 let lastAccessibleStatus = '';
+let lastTapAt = -Infinity;
+let missFlashTimeout = null;
+const MIN_TAP_INTERVAL_MS = 220;
 
 function readBest() {
   try { return Math.max(0, Number(localStorage.getItem(GAME_CONFIG.storageKey)) || 0); }
@@ -48,9 +52,12 @@ function syncUI() {
   $('score').textContent = game.score;
   $('best').textContent = best;
   $('foods').textContent = game.foods;
+  const hearts = Array.from({ length: GAME_CONFIG.lives }, (_, i) => i < game.lives ? '♥' : '♡').join(' ');
+  $('lives').textContent = hearts;
+  $('lives').setAttribute('aria-label', `${game.lives} of ${GAME_CONFIG.lives} lives remaining`);
   $('points-now').textContent = game.status === 'playing' || game.status === 'paused' ? game.availablePoints : 0;
   $('level').textContent = game.speedLevel;
-  $('speed-value').textContent = `${Math.round(game.currentSpeed)} px/s`;
+  $('speed-value').textContent = `${Math.round(game.effectiveSpeed)} px/s${game.speedBurstActive ? ' ⚡' : ''}`;
   $('progress-fill').style.width = `${(game.levelProgress / GAME_CONFIG.foodsPerSpeedLevel) * 100}%`;
   $('progress-text').textContent = `${game.levelProgress} / ${GAME_CONFIG.foodsPerSpeedLevel} foods`;
   $('distance').textContent = `${Math.round(game.distanceToFood)} px away`;
@@ -59,7 +66,7 @@ function syncUI() {
     ? game.availablePoints >= 75 ? 'Perfect zone — TAP NOW!'
       : game.availablePoints > 0 ? 'Scoring zone — tap!' : 'Approaching food…'
     : game.status === 'paused' ? 'Game paused'
-      : game.status === 'gameover' ? 'Food reached — game over' : 'Ready to play';
+      : game.status === 'gameover' ? (game.gameOverReason === 'misses' ? 'No lives left — game over' : 'Food reached — game over') : 'Ready to play';
   if (status !== lastAccessibleStatus) {
     $('game-status').textContent = status;
     lastAccessibleStatus = status;
@@ -92,6 +99,9 @@ function start() {
   game.start();
   overlay.hidden = true;
   $('pause-button').textContent = 'Ⅱ Pause';
+  $('restart-button').textContent = '↻ Restart';
+  lastTapAt = -Infinity;
+  $('board').classList.remove('miss-flash');
   popup.classList.remove('animate');
   syncUI();
   renderer.render(game);
@@ -107,6 +117,8 @@ function endGame() {
     `You scored ${game.score} points across ${game.foods} collected foods. You reached speed level ${game.speedLevel}.`,
     '↻ Play Again', true);
   $('pause-button').textContent = '↻ Play Again';
+  $('restart-button').textContent = '↗ Share Score';
+  $('board').classList.remove('miss-flash');
   popup.classList.remove('animate');
 }
 
@@ -128,23 +140,41 @@ function togglePause() {
 function flashPoints(result) {
   popup.classList.remove('animate');
   void popup.offsetWidth; // Restart animation even on rapid consecutive taps.
-  popup.textContent = result.speedUp ? `SPEED UP! +${result.points}`
+  popup.textContent = result.missed ? `MISS! ${result.lives} ♥ LEFT`
+    : result.burstStarted ? `SPEED BURST! +${result.points}`
+    : result.speedUp ? `SPEED UP! +${result.points}`
     : result.points === 0 ? 'TOO EARLY · +0'
       : result.points >= 90 ? `+${result.points} PERFECT!` : `+${result.points}`;
-  popup.style.color = result.speedUp || result.points >= 75 ? '#bfff9b'
+  popup.style.color = result.missed ? '#ff918b' : result.speedUp || result.points >= 75 ? '#bfff9b'
     : result.points > 0 ? '#ffd683' : '#e1e7dd';
   popup.classList.add('animate');
 }
 
 function tap() {
   if (game.status !== 'playing') return;
+  // Debounce unintended double taps without slowing the snake's animation.
+  const now = performance.now();
+  if (now - lastTapAt < MIN_TAP_INTERVAL_MS) return;
+  lastTapAt = now;
   const result = game.tap();
   if (!result.accepted) {
     if (game.status === 'gameover') endGame();
     return;
   }
   persistBest();
+  if (result.gameOver) {
+    endGame();
+    return;
+  }
   flashPoints(result);
+  if (result.missed) {
+    const board = $('board');
+    board.classList.remove('miss-flash');
+    void board.offsetWidth;
+    board.classList.add('miss-flash');
+    clearTimeout(missFlashTimeout);
+    missFlashTimeout = setTimeout(() => board.classList.remove('miss-flash'), 380);
+  }
   syncUI();
   renderer.render(game);
 }
@@ -240,8 +270,7 @@ $('board').addEventListener('keydown', event => {
   }
 });
 $('pause-button').addEventListener('click', togglePause);
-$('restart-button').addEventListener('click', start);
-$('share-button').addEventListener('click', shareImage);
+$('restart-button').addEventListener('click', () => { if (game.status === 'gameover') shareImage(); else start(); });
 $('install-button').addEventListener('click', installApp);
 window.addEventListener('keydown', event => {
   if (event.code !== 'Space' || event.repeat) return;
@@ -273,6 +302,7 @@ window.SnakeChaseAPI = Object.freeze({
   resume: () => { if (game.status === 'paused') togglePause(); },
   tap,
   shareImage,
+  getConfig: () => ({...GAME_CONFIG, speedBursts: {...GAME_CONFIG.speedBursts}, shrinkingRadius: {...GAME_CONFIG.shrinkingRadius}}),
 });
 
 updateNetworkIndicator();

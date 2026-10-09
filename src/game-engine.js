@@ -24,6 +24,11 @@ export class SnakeGame {
     this.status = 'ready';
     this.score = 0;
     this.foods = 0;
+    this.lives = c.lives;
+    this.missedTaps = 0;
+    this.scoringRadius = c.scoringRadius;
+    this.burstRemainingSeconds = 0;
+    this.gameOverReason = null;
     this.currentSpeed = c.initialSpeed;
     this.targetSpeed = c.initialSpeed;
     this.snakeLength = c.initialSnakeLength;
@@ -80,6 +85,10 @@ export class SnakeGame {
   setBoardHeight(value) { this.setBoardDimensions(this.boardWidth, value); }
 
   get distanceToFood() { return distance(this.head, this.food); }
+  get speedBurstActive() { return this.burstRemainingSeconds > 0; }
+  get effectiveSpeed() {
+    return this.currentSpeed * (this.speedBurstActive ? this.config.speedBursts.multiplier : 1);
+  }
   get speedLevel() { return Math.floor(this.foods / this.config.foodsPerSpeedLevel) + 1; }
   get levelProgress() { return this.foods % this.config.foodsPerSpeedLevel; }
 
@@ -91,11 +100,12 @@ export class SnakeGame {
     return Math.max(1, Math.min(c.maximumPointsPerTap, Math.round(ratio * c.maximumPointsPerTap)));
   }
 
-  /** A tap always redirects to a new food, including an early (zero-point) tap. */
+  /** A tap scores or loses a life. The third miss ends the game without moving its target. */
   tap() {
     if (this.status !== 'playing') return { accepted: false, reason: `Game is ${this.status}.` };
     if (this.distanceToFood <= this.config.collisionRadius) {
       this.status = 'gameover';
+      this.gameOverReason = 'collision';
       return { accepted: false, reason: 'The snake has already reached the food.' };
     }
 
@@ -104,8 +114,15 @@ export class SnakeGame {
     const oldHead = copyPoint(this.head);
     const previousLevel = this.speedLevel;
     this.score += earned;
-
-    if (earned > 0) {
+    const missed = earned === 0;
+    if (missed) {
+      this.missedTaps += 1;
+      this.lives = Math.max(0, this.lives - 1);
+      if (this.lives === 0) {
+        this.status = 'gameover';
+        this.gameOverReason = 'misses';
+      }
+    } else {
       this.foods += 1;
       this.snakeLength = Math.min(this.config.maximumSnakeLength, this.snakeLength + this.config.growthPerFood);
     }
@@ -118,14 +135,39 @@ export class SnakeGame {
       );
     }
 
-    this.placeNextFood(oldFood);
-    this.direction = directionTo(this.head, this.food);
+    // Radius shrinks at each 10-food milestone, regardless of the speed-level setting.
+    if (earned > 0 && this.config.shrinkingRadius.enabled) {
+      const shrink = this.config.shrinkingRadius;
+      this.scoringRadius = Math.max(shrink.minimumRadius,
+        this.config.scoringRadius - Math.floor(this.foods / 10) * shrink.reductionPer10Foods);
+    }
+
+    let burstStarted = false;
+    if (earned > 0 && this.config.speedBursts.enabled) {
+      const burst = this.config.speedBursts;
+      if (this.foods >= burst.startAfterFoods &&
+          (this.foods - burst.startAfterFoods) % burst.everyFoods === 0) {
+        this.burstRemainingSeconds = burst.durationMs / 1000;
+        burstStarted = true;
+      }
+    }
+
+    // Keep the body and head in place. Spawn a new target except on final miss.
+    if (this.status === 'playing') {
+      this.placeNextFood(oldFood);
+      this.direction = directionTo(this.head, this.food);
+    }
 
     return {
       accepted: true,
       points: earned,
       foodCollected: earned > 0,
       speedUp,
+      burstStarted,
+      missed,
+      lives: this.lives,
+      gameOver: this.status === 'gameover',
+      radiusChanged: this.scoringRadius !== this.config.scoringRadius && earned > 0 && this.foods % 10 === 0,
       speedLevel: this.speedLevel,
       // Useful for integrations and deterministic testing.
       oldHead,
@@ -183,7 +225,11 @@ export class SnakeGame {
     this.currentSpeed += (this.targetSpeed - this.currentSpeed) * Math.min(1, c.accelerationRate * dt);
     this.direction = directionTo(this.head, this.food);
     const distanceRemaining = this.distanceToFood;
-    const move = this.currentSpeed * dt;
+    // Apply the burst for no more than its remaining duration, even across frame boundaries.
+    const burstTime = Math.min(dt, this.burstRemainingSeconds);
+    const multiplier = c.speedBursts.enabled ? c.speedBursts.multiplier : 1;
+    const move = this.currentSpeed * (dt + burstTime * (multiplier - 1));
+    this.burstRemainingSeconds = Math.max(0, this.burstRemainingSeconds - dt);
 
     // Prevent the snake stepping past a target between animation frames.
     if (distanceRemaining <= c.collisionRadius + move) {
@@ -193,6 +239,7 @@ export class SnakeGame {
       this.trail.push(copyPoint(this.head));
       this.trimTrail();
       this.status = 'gameover';
+      this.gameOverReason = 'collision';
       return { changed: true, gameOver: true };
     }
 
@@ -228,6 +275,13 @@ export class SnakeGame {
       status: this.status,
       score: this.score,
       foods: this.foods,
+      lives: this.lives,
+      maxLives: this.config.lives,
+      missedTaps: this.missedTaps,
+      gameOverReason: this.gameOverReason,
+      burstActive: this.speedBurstActive,
+      effectiveSpeed: this.effectiveSpeed,
+      burstRemainingSeconds: this.burstRemainingSeconds,
       speedLevel: this.speedLevel,
       levelProgress: this.levelProgress,
       currentSpeed: this.currentSpeed,

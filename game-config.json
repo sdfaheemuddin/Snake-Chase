@@ -1,0 +1,20 @@
+{
+  "initialSpeed": 130,
+  "maximumSpeed": 220,
+  "speedIncreasePerLevel": 12,
+  "foodsPerSpeedLevel": 10,
+  "lives": 3,
+  "scoringRadius": 100,
+  "speedBursts": {
+    "enabled": true,
+    "startAfterFoods": 20,
+    "everyFoods": 5,
+    "multiplier": 1.2,
+    "durationMs": 600
+  },
+  "shrinkingRadius": {
+    "enabled": true,
+    "reductionPer10Foods": 5,
+    "minimumRadius": 75
+  }
+}

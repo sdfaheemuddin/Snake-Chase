@@ -56,6 +56,8 @@ export function buildScreenSnapshot(root, boardCanvas) {
   panel(ctx, speed, '#192d21', '#36533f');
   text(ctx, `↗ Speed level ${root.querySelector('#level').textContent}`, speed.x + 11, speed.y + 15, 12, '#c9deca');
   text(ctx, root.querySelector('#speed-value').textContent, speed.x + speed.w - 11, speed.y + 15, 12, '#ddf3d5', 700, 'right');
+  text(ctx, root.querySelector('#lives').textContent, speed.x + speed.w * 0.52, speed.y + 15,
+    13, '#ff918b', 800, 'center');
   const track = rectIn(root.querySelector('.progress-track'), rootRect);
   panel(ctx, track, '#385541', null, 4);
   const fill = root.querySelector('.progress-fill').getBoundingClientRect();

@@ -1,11 +1,12 @@
 /* Offline-first service worker. Every asset URL is relative to this PWA's scope,
  * so GitHub Pages works at both / and /repository-name/ without edits. */
 const CACHE_PREFIX = 'snake-chase-pwa-';
-const CACHE_NAME = `${CACHE_PREFIX}v2`;
+const CACHE_NAME = `${CACHE_PREFIX}v3`;
 const FILES = [
   './',
   './index.html',
   './styles.css',
+  './game-config.json',
   './manifest.webmanifest',
   './src/config.js',
   './src/game-engine.js',
@@ -41,6 +42,20 @@ self.addEventListener('fetch', event => {
   const requestUrl = new URL(request.url);
   if (requestUrl.origin !== self.location.origin) return;
   if (!requestUrl.href.startsWith(self.registration.scope)) return;
+
+  // Public game settings must update online; keep the last good version for offline PWA play.
+  if (requestUrl.pathname.endsWith('/game-config.json')) {
+    event.respondWith(fetch(new Request(request, { cache: 'no-store' }))
+      .then(response => {
+        if (response.ok) {
+          const copy = response.clone();
+          event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put(request, copy)));
+        }
+        return response;
+      })
+      .catch(async () => (await caches.match(request)) || (await caches.match(new URL('./game-config.json', self.registration.scope).href))));
+    return;
+  }
 
   if (request.mode === 'navigate') {
     event.respondWith(

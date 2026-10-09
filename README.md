@@ -6,11 +6,11 @@ A shareable, offline-capable snake timing game. No npm install or backend needed
 
 - The **same snake** continuously moves toward the red food.
 - **Tap anywhere on the game board** (or press Space) before the snake touches it.
-- Your tap always places a **new food target on the same board**, and the existing snake turns toward it; the snake's current position and body trail are preserved.
-- Outside the **fixed 100-unit** yellow scoring radius (visually scaled to the device width): **0 points**. Inside the circle: up to **100 points** as you get closer.
-- Only positive-point taps count as **collected foods**; zero-point taps still move the food.
-- After **10, 20, 30, ...** collected foods, target speed rises by **12 px/s**, from **100 px/s** to a maximum of **220 px/s**. Speed eases gradually toward each new target.
-- The game ends if the snake reaches the food before you tap.
+- A successful tap or an early tap with lives remaining places a **new food target on the same board**, and the existing snake turns toward it; the snake's current position and body trail are preserved.
+- Outside the scoring radius: **0 points and one life lost**. Inside: up to **100 points**. The radius starts at **100 logical units** and shrinks by 5 every 10 foods, down to 75; it scales uniformly with the screen.
+- Only positive-point taps count as **collected foods**. Each early tap loses one of 3 lives and still redirects the snake, except the third miss ends the game.
+- After **10, 20, 30, ...** collected foods, base target speed rises by **12 logical units/s**, from **130** to a maximum base speed of **220**. Speed eases gradually toward each target. At 20 foods and every 5 foods afterward, a **1.2× speed burst** runs for 600 ms. The temporary effective speed can exceed the base cap.
+- The game ends if the snake reaches the food or all three lives are lost.
 - Best score is stored in this browser on this device, not synced between devices.
 
 ## Publish on GitHub Pages (recommended)
@@ -51,7 +51,7 @@ The PWA requires a local HTTP server; opening `index.html` directly as a file wi
 
 ## Screen snapshot and native sharing
 
-Use **Share image** to capture the current game board, snake, food, scores,
+On the game-over screen, tap **Share Score** to capture the current game board, snake, food, scores,
 progress, and the small game-over badge (when the game is over) as a PNG.
 On Android Chrome, the operating-system sharing sheet opens and you can pick
 WhatsApp, Bluetooth, Nearby Share, or any other supported app. When the browser
@@ -59,14 +59,14 @@ does not support sharing image files, the PNG is downloaded instead.
 The image is generated entirely on-device; no upload or third-party screenshot
 service is used. If you cancel the Android share sheet, no file is downloaded.
 
-## Full-screen game and fixed radius
+## Full-screen game and adaptive challenge
 
 The installed PWA requests **fullscreen** presentation. The game fills the
 available browser / device viewport, and the canvas uses a responsive portrait
-playfield without stretching the snake or the 100-unit scoring circle.
-There is no scoring-radius slider or public radius-changing API.
+playfield without stretching the snake or scoring circle.
+The radius changes automatically by difficulty level. There is no slider or player-facing radius setting.
 At game-over the board stays visible behind a small icon + GAME OVER badge,
-and the Pause button changes into **Play Again**.
+and the Pause button changes into **Play Again**. The Restart button changes to **Share Score**.
 
 ## File layout
 
@@ -75,7 +75,8 @@ index.html                  Game interface
 styles.css                  Responsive Android-friendly styling
 manifest.webmanifest        PWA name, scope, icons and display mode
 sw.js                       Offline cache service worker
-src/config.js               Game configuration
+game-config.json            Public difficulty settings (GitHub-editable)
+src/config.js               Config validation and offline defaults
 src/game-engine.js          Testable gameplay model and scoring logic
 src/renderer.js             Responsive Canvas view
 src/share.js                Offline PNG screenshot/share rendering
@@ -99,7 +100,24 @@ window.SnakeChaseAPI.restart();
 window.SnakeChaseAPI.shareImage();
 ```
 
-To adjust progression, edit `src/config.js`. If you publish an update to static files, **increment `CACHE_NAME` in `sw.js`** so already-installed apps fetch the revised assets.
+## Difficulty settings
+
+Edit [`game-config.json`](./game-config.json) directly in GitHub to update everyone after GitHub Pages redeploys and the next page reload. Config is fetched network-first, with a service-worker cache and built-in defaults when offline. The settings are **locked for the duration of a game** (changes take effect after the next page reload). There is no backend and public config cannot securely enforce anti-cheat or protect secrets. Players with developer tools can locally override client-side gameplay; a future ranked leaderboard should validate scores on a server.
+
+```json
+{
+  "initialSpeed": 130,
+  "maximumSpeed": 220,
+  "speedIncreasePerLevel": 12,
+  "foodsPerSpeedLevel": 10,
+  "lives": 3,
+  "scoringRadius": 100,
+  "speedBursts": { "enabled": true, "startAfterFoods": 20, "everyFoods": 5, "multiplier": 1.2, "durationMs": 600 },
+  "shrinkingRadius": { "enabled": true, "reductionPer10Foods": 5, "minimumRadius": 75 }
+}
+```
+
+Bump `CACHE_NAME` in `sw.js` when changing the static JavaScript, CSS or HTML assets. The public JSON settings themselves use a network-first fetch and can be edited without changing the service-worker cache name.
 
 No analytics, trackers, server, user login, or online leaderboard are included.
 

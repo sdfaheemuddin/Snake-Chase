@@ -22,3 +22,23 @@ body{margin:0;background:radial-gradient(circle at top,#193629 0%,#0d1914 65%,#0
 @media(min-width:800px){.app-shell{padding:12px;gap:10px}.brand h1{font-size:21px}.board{border-radius:13px}.action-row{max-width:none}}
 @media(max-height:540px){.app-shell{gap:4px;padding-top:3px;padding-bottom:3px}.brand p,.progress-caption{display:none}.stat-card{padding:4px 1px}.stats-grid{gap:4px}.speed-panel{padding:4px 8px}.action-row .button{padding:7px}.live-row{padding:0 2px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+
+/* Accessible, viewport-relative sizing with hard limits on very small/large displays. */
+.brand h1{font-size:clamp(18px,4.4vw,26px)}
+.brand p{font-size:clamp(11px,2.5vw,13px)}
+.stat-value{font-size:clamp(22px,5.4vw,36px)}
+.stat-label{font-size:clamp(11px,2.8vw,14px);letter-spacing:0}
+.stat-card{padding:clamp(7px,1.25vh,12px) 2px}
+.speed-row{font-size:clamp(11px,2.9vw,15px);align-items:center;gap:5px}
+.speed-row b{font-size:clamp(12px,3.1vw,16px)}
+.lives-display{color:#ff938e!important;font-size:clamp(15px,4vw,21px);font-weight:850!important;white-space:nowrap;letter-spacing:-1px;line-height:1}
+.progress-caption{font-size:clamp(10px,2.6vw,13px)}
+.live-row{font-size:clamp(11px,2.8vw,14px)}
+.button{font-size:clamp(14px,3.9vw,18px);min-height:clamp(46px,7.4vh,64px);padding:9px clamp(9px,2.5vw,20px)}
+.install{font-size:clamp(12px,2.6vw,15px);min-height:clamp(38px,6vh,50px)}
+.primary{font-size:clamp(15px,4vw,19px)}
+.center-overlay.game-over h2{font-size:clamp(16px,4.2vw,22px)}
+.points-popup{font-size:clamp(20px,6.5vw,30px)}
+.board.miss-flash{animation:missFeedback .36s ease-out}
+@keyframes missFeedback{0%,100%{box-shadow:inset 0 0 0 0 transparent}25%,70%{box-shadow:inset 0 0 0 7px rgba(255,94,86,.8)}}
+@media(max-height:540px){.stat-value{font-size:clamp(20px,4vh,26px)}.stat-label{font-size:11px}.button{min-height:42px;padding:6px 10px}.install{min-height:34px}.brand h1{font-size:18px}.speed-row{font-size:11px}}

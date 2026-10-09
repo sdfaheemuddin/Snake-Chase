@@ -36,7 +36,7 @@
     </section>
 
     <section class="speed-panel" aria-label="Speed progression">
-      <div class="speed-row"><span>↗ Speed level <b id="level">1</b></span><span id="speed-value">100 px/s</span></div>
+      <div class="speed-row"><span>↗ Speed level <b id="level">1</b></span><span class="lives-display" id="lives" aria-label="3 lives remaining">♥ ♥ ♥</span><span id="speed-value">130 px/s</span></div>
       <div class="progress-track" aria-label="Foods until next speed level"><div class="progress-fill" id="progress-fill"></div></div>
       <div class="progress-caption"><span id="progress-text">0 / 10 foods</span><span>Next speed boost</span></div>
     </section>
@@ -50,7 +50,7 @@
             <div class="overlay-symbol" id="overlay-symbol" aria-hidden="true">🐍</div>
             <img class="gameover-art" src="./assets/icon-192.png" alt="" width="36" height="36">
             <h2 id="overlay-title">READY TO CHASE?</h2>
-            <p id="overlay-message">Tap before the snake reaches the food. Closer taps earn up to 100 points. Every 10 foods, it gets faster!</p>
+            <p id="overlay-message">Tap before the snake reaches the food. Closer taps earn up to 100 points. You have 3 lives. Every 10 foods, it gets faster!</p>
             <button class="button primary" id="start-button" type="button">▶ Start Game</button>
           </div>
         </div>
@@ -60,8 +60,7 @@
 
     <div class="action-row">
       <button class="button secondary" id="pause-button" type="button">Ⅱ Pause</button>
-      <button class="button secondary" id="restart-button" type="button">↻ Restart</button>
-      <button class="button share-button" id="share-button" type="button">↗ Share image</button>
+      <button class="button share-button" id="restart-button" type="button">↻ Restart</button>
     </div>
     <div id="install-help" class="install-help" hidden>On Android, open this site in Chrome, tap ⋮ and choose Install app or Add to Home screen.</div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
