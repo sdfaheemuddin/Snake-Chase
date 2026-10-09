@@ -24,6 +24,7 @@ export const GAME_CONFIG = Object.freeze({
   shrinkingRadius: Object.freeze({
     enabled: true,
     reductionPer10Foods: 5,
+    startAfterSpeedLevel: 3,
     minimumRadius: 75,
   }),
   storageKey: 'snake-chase-pwa-best-v1',
@@ -73,6 +74,8 @@ export function resolveGameConfig(input = {}) {
       enabled: booleanOr(shrink.enabled, b.shrinkingRadius.enabled),
       reductionPer10Foods: numberInRange(shrink.reductionPer10Foods,
         b.shrinkingRadius.reductionPer10Foods, 0, 15),
+      startAfterSpeedLevel: numberInRange(shrink.startAfterSpeedLevel,
+        b.shrinkingRadius.startAfterSpeedLevel, 1, 30, true),
       minimumRadius,
     }),
   });

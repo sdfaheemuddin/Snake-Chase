@@ -20,6 +20,7 @@ test('JSON configuration enables both challenges with 130 initial speed', () => 
   assert.equal(loaded.scoringRadius, 100);
   assert.equal(loaded.speedBursts.enabled, true);
   assert.equal(loaded.shrinkingRadius.enabled, true);
+  assert.equal(loaded.shrinkingRadius.startAfterSpeedLevel, 3);
   assert.equal(Object.isFrozen(loaded.speedBursts), true);
 });
 
@@ -156,11 +157,13 @@ test('burst uses a higher movement multiplier without resetting base speed', () 
   assert.equal(game.targetSpeed, 130);
 });
 
-test('radius shrinks 5 per ten foods to minimum 75', () => {
+test('radius stays at 100 through level 3; starts shrinking at level 4 and stops at 75', () => {
   const game = new SnakeGame(); game.start();
   for (let i = 1; i <= 100; i++) {
-    accurateTap(game);
-    assert.equal(game.scoringRadius, Math.max(75, 100 - Math.floor(i / 10) * 5));
+    const result = accurateTap(game);
+    const expected = Math.max(75, 100 - Math.max(0, Math.floor(i / 10) - 2) * 5);
+    assert.equal(game.scoringRadius, expected, `At food ${i}`);
+    assert.equal(result.radiusChanged, i >= 30 && i <= 70 && i % 10 === 0);
   }
   assert.equal(game.scoringRadius, 75);
 });
@@ -197,4 +200,21 @@ test('full-height portrait and landscape screen resizing retains trail', () => {
   assert.equal(game.boardWidth, 800);
   assert.equal(game.boardHeight, 420);
   assert.throws(() => game.setBoardHeight(10), /Invalid game board dimensions/);
+});
+
+
+test('rapid consecutive misses without time delay consume all three lives', () => {
+  const game = new SnakeGame(); game.start();
+  const results = Array.from({ length: 3 }, () => game.tap());
+  assert.deepEqual(results.map(result => result.lives), [2, 1, 0]);
+  assert.equal(results[2].gameOver, true);
+  assert.equal(game.status, 'gameover');
+  assert.equal(game.missedTaps, 3);
+});
+
+test('radius cutoff is configurable through public game JSON', () => {
+  const config = resolveGameConfig({ shrinkingRadius: { startAfterSpeedLevel: 5 } });
+  const game = new SnakeGame({ config }); game.start();
+  for (let i=0; i<50; i++) accurateTap(game);
+  assert.equal(game.scoringRadius, 95); // Reduction starts when level 6 begins
 });

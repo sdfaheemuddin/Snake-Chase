@@ -7,7 +7,7 @@ A shareable, offline-capable snake timing game. No npm install or backend needed
 - The **same snake** continuously moves toward the red food.
 - **Tap anywhere on the game board** (or press Space) before the snake touches it.
 - A successful tap or an early tap with lives remaining places a **new food target on the same board**, and the existing snake turns toward it; the snake's current position and body trail are preserved.
-- Outside the scoring radius: **0 points and one life lost**. Inside: up to **100 points**. The radius starts at **100 logical units** and shrinks by 5 every 10 foods, down to 75; it scales uniformly with the screen.
+- Outside the scoring radius: **0 points and one life lost**. Inside: up to **100 points**. The radius starts at **100 logical units**, stays fixed through speed level 3, and shrinks by 5 at the start of each subsequent level (30, 40, 50... foods), down to 75; it scales uniformly with the screen.
 - Only positive-point taps count as **collected foods**. Each early tap loses one of 3 lives and still redirects the snake, except the third miss ends the game.
 - After **10, 20, 30, ...** collected foods, base target speed rises by **12 logical units/s**, from **130** to a maximum base speed of **220**. Speed eases gradually toward each target. At 20 foods and every 5 foods afterward, a **1.2× speed burst** runs for 600 ms. The temporary effective speed can exceed the base cap.
 - The game ends if the snake reaches the food or all three lives are lost.
@@ -52,7 +52,7 @@ The PWA requires a local HTTP server; opening `index.html` directly as a file wi
 ## Screen snapshot and native sharing
 
 On the game-over screen, tap **Share Score** to capture the current game board, snake, food, scores,
-progress, and the small game-over badge (when the game is over) as a PNG.
+progress, active radius, and the small game-over badge as a **3× high-resolution PNG** (without action buttons). The native share text includes the achieved speed level.
 On Android Chrome, the operating-system sharing sheet opens and you can pick
 WhatsApp, Bluetooth, Nearby Share, or any other supported app. When the browser
 does not support sharing image files, the PNG is downloaded instead.
@@ -113,11 +113,11 @@ Edit [`game-config.json`](./game-config.json) directly in GitHub to update every
   "lives": 3,
   "scoringRadius": 100,
   "speedBursts": { "enabled": true, "startAfterFoods": 20, "everyFoods": 5, "multiplier": 1.2, "durationMs": 600 },
-  "shrinkingRadius": { "enabled": true, "reductionPer10Foods": 5, "minimumRadius": 75 }
+  "shrinkingRadius": { "enabled": true, "startAfterSpeedLevel": 3, "reductionPer10Foods": 5, "minimumRadius": 75 }
 }
 ```
 
-Bump `CACHE_NAME` in `sw.js` when changing the static JavaScript, CSS or HTML assets. The public JSON settings themselves use a network-first fetch and can be edited without changing the service-worker cache name.
+The PWA uses network-first loading for all application assets and an offline cache fallback. Bump `CACHE_NAME` in `sw.js` when changing application assets so older offline caches are cleared. When changing JavaScript imports, also update the `?v=` asset version suffixes to avoid stale mixed-module versions during rollout.
 
 No analytics, trackers, server, user login, or online leaderboard are included.
 
@@ -135,3 +135,11 @@ python tools/generate_icons.py
 **Important:** For GitHub Pages to be publicly accessible on a free GitHub account,
 make the repository **Public** in Settings → General → Danger Zone (if appropriate).
 Pages access for a private repository depends on your GitHub plan and settings.
+
+## Speed and score release notes
+
+- Three rapid early taps now correctly consume all three lives; no tap debounce discards intentional misses.
+- Scoring radius is 100 through speed levels 1–3; it starts decreasing in level 4 (30 foods).
+- `shrinkingRadius.startAfterSpeedLevel` in `game-config.json` changes that milestone.
+- Android native share message includes score and speed level; screenshot exports as a high-resolution PNG without controls.
+- The service worker uses network-first app assets and offline cache fallback to prevent mismatched versions after deployment.

@@ -1,7 +1,7 @@
-import { loadGameConfig } from './config.js';
-import { SnakeGame } from './game-engine.js';
-import { GameRenderer } from './renderer.js';
-import { buildScreenSnapshot, canvasToPngFile } from './share.js';
+import { loadGameConfig } from './config.js?v=6';
+import { SnakeGame } from './game-engine.js?v=6';
+import { GameRenderer } from './renderer.js?v=6';
+import { buildScreenSnapshot, canvasToPngFile } from './share.js?v=6';
 
 const $ = id => document.getElementById(id);
 const GAME_CONFIG = await loadGameConfig();
@@ -15,9 +15,7 @@ let animationId = null;
 let deferredInstallPrompt = null;
 let toastTimeout = null;
 let lastAccessibleStatus = '';
-let lastTapAt = -Infinity;
 let missFlashTimeout = null;
-const MIN_TAP_INTERVAL_MS = 220;
 
 function readBest() {
   try { return Math.max(0, Number(localStorage.getItem(GAME_CONFIG.storageKey)) || 0); }
@@ -55,6 +53,8 @@ function syncUI() {
   const hearts = Array.from({ length: GAME_CONFIG.lives }, (_, i) => i < game.lives ? '♥' : '♡').join(' ');
   $('lives').textContent = hearts;
   $('lives').setAttribute('aria-label', `${game.lives} of ${GAME_CONFIG.lives} lives remaining`);
+  $('lives-count').textContent = `${game.lives}/${GAME_CONFIG.lives}`;
+  $('radius-value').textContent = String(game.scoringRadius);
   $('points-now').textContent = game.status === 'playing' || game.status === 'paused' ? game.availablePoints : 0;
   $('level').textContent = game.speedLevel;
   $('speed-value').textContent = `${Math.round(game.effectiveSpeed)} px/s${game.speedBurstActive ? ' ⚡' : ''}`;
@@ -100,7 +100,6 @@ function start() {
   overlay.hidden = true;
   $('pause-button').textContent = 'Ⅱ Pause';
   $('restart-button').textContent = '↻ Restart';
-  lastTapAt = -Infinity;
   $('board').classList.remove('miss-flash');
   popup.classList.remove('animate');
   syncUI();
@@ -152,10 +151,8 @@ function flashPoints(result) {
 
 function tap() {
   if (game.status !== 'playing') return;
-  // Debounce unintended double taps without slowing the snake's animation.
-  const now = performance.now();
-  if (now - lastTapAt < MIN_TAP_INTERVAL_MS) return;
-  lastTapAt = now;
+  // Each deliberate pointerdown counts, including rapid consecutive misses.
+  // The board has only one pointer listener, so no 220ms debounce is needed.
   const result = game.tap();
   if (!result.accepted) {
     if (game.status === 'gameover') endGame();
@@ -205,7 +202,7 @@ async function shareImage() {
       await navigator.share({
         files: [file],
         title: 'Snake Chase',
-        text: `I scored ${game.score} points in Snake Chase! Play: ${canonicalGameUrl()}`,
+        text: `I scored ${game.score} points and reached speed level ${game.speedLevel} in Snake Chase! Play: ${canonicalGameUrl()}`,
       });
       return;
     }
@@ -260,6 +257,7 @@ $('start-button').addEventListener('click', event => {
 });
 $('board').addEventListener('pointerdown', event => {
   if (!overlay.hidden || event.target.closest('button')) return;
+  if (!event.isPrimary) return;
   event.preventDefault();
   tap();
 });

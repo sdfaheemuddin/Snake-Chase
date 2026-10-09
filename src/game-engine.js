@@ -1,4 +1,4 @@
-import { GAME_CONFIG } from './config.js';
+import { GAME_CONFIG } from './config.js?v=6';
 
 const copyPoint = point => ({ x: point.x, y: point.y });
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -113,6 +113,7 @@ export class SnakeGame {
     const oldFood = copyPoint(this.food);
     const oldHead = copyPoint(this.head);
     const previousLevel = this.speedLevel;
+    const previousRadius = this.scoringRadius;
     this.score += earned;
     const missed = earned === 0;
     if (missed) {
@@ -135,11 +136,13 @@ export class SnakeGame {
       );
     }
 
-    // Radius shrinks at each 10-food milestone, regardless of the speed-level setting.
+    // Radius remains full through the configured speed level, then shrinks
+    // each time the NEXT level begins (e.g. level 4 starts at 30 foods).
     if (earned > 0 && this.config.shrinkingRadius.enabled) {
       const shrink = this.config.shrinkingRadius;
+      const reductions = Math.max(0, this.speedLevel - shrink.startAfterSpeedLevel);
       this.scoringRadius = Math.max(shrink.minimumRadius,
-        this.config.scoringRadius - Math.floor(this.foods / 10) * shrink.reductionPer10Foods);
+        this.config.scoringRadius - reductions * shrink.reductionPer10Foods);
     }
 
     let burstStarted = false;
@@ -167,7 +170,7 @@ export class SnakeGame {
       missed,
       lives: this.lives,
       gameOver: this.status === 'gameover',
-      radiusChanged: this.scoringRadius !== this.config.scoringRadius && earned > 0 && this.foods % 10 === 0,
+      radiusChanged: this.scoringRadius !== previousRadius,
       speedLevel: this.speedLevel,
       // Useful for integrations and deterministic testing.
       oldHead,
