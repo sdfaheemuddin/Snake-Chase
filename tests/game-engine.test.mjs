@@ -317,7 +317,7 @@ test('radius cutoff is configurable through public game JSON', () => {
 test('head-score settings are public, individually configurable, and validated', () => {
   const config = resolveGameConfig(getJson());
   assert.deepEqual(config.headScore, {
-    enabled: true, tapAnimationAtHead: true, showZero: true, offset: 38,
+    enabled: true, tapAnimationAtHead: true, showZero: false, offset: 38,
   });
   assert.equal(Object.isFrozen(config.headScore), true);
   const disabled = resolveGameConfig({headScore: {enabled: false, tapAnimationAtHead: false, showZero: false, offset: 55}});

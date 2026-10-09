@@ -22,7 +22,7 @@
   "headScore": {
     "enabled": true,
     "tapAnimationAtHead": true,
-    "showZero": true,
+    "showZero": false,
     "offset": 38
   }
 }
